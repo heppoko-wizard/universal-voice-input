@@ -1,0 +1,7 @@
+groq
+sounddevice
+scipy
+numpy
+pyperclip
+pynput
+python-dotenv
