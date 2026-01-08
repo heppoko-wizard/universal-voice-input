@@ -1,141 +1,93 @@
-# Linux Speech-to-Text Tool (Groq API)
+# 🎙️ Linux Speech-to-Text Tool (v2.0)
 
-A lightning-fast, highly accurate speech-to-text tool for Linux (tested on Kubuntu/KDE).  
-It uses the **Groq API** (Whisper Large V3) for near-instant transcription and types the result into any active window.
-
-## Features
-
-- **Global Hotkey**: Press `Ctrl` + `Alt` + `Space` to record, release (toggle) to transcribe.
-- **Ultra Fast**: Powered by Groq's LPU, transcription takes < 0.5s.
-- **High Accuracy**: Uses OpenAI's Whisper Large V3 model.
-- **Smart Input**: Pastes text via clipboard to handle Japanese/Kanji perfectly, then **restores your original clipboard**.
-- **Hardware Aware**: Automatically detects "Blue Yeti" microphones (configurable).
-
-## Requirements
-
-- Linux (X11) - Wayland support is experimental/limited (requires `xdotool` alternative).
-- Python 3.8+
-- A [Groq API Key](https://console.groq.com/keys) (Free Beta available).
-- System packages: `xdotool`, `xclip`, `portaudio19-dev`
-
-## Installation
-
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/linux-groq-stt.git
-   cd linux-groq-stt
-   ```
-
-2. **Install system dependencies**:
-   ```bash
-   sudo apt update
-   sudo apt install -y xdotool xclip portaudio19-dev python3-venv
-   ```
-
-3. **Setup Python environment**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-4. **Configure API Key**:
-   Create a `.env` file in the project root:
-   ```bash
-   cp .env.example .env
-   # Edit .env and add your key: GROQ_API_KEY=gsk_...
-   ```
-
-## Usage
-
-1. **Run the script**:
-   ```bash
-   ./start_stt.sh
-   ```
-   
-2. **Dictate**:
-   - Focus on any text field (Text Editor, Browser, Slack, etc.).
-   - Press **`Ctrl` + `Alt` + `Space`**. (You'll hear a start sound).
-   - Speak.
-   - Press **`Ctrl` + `Alt` + `Space`** again. (You'll hear a stop sound).
-   - The text will magically appear!
-
-## Configuration
-
-Edit `groq_stt.py` to change:
-- **Hotkey**: Search for `<ctrl>+<alt>+<space>`.
-- **Microphone**: Modify `get_blue_yeti_device_id` or `SAMPLE_RATE` if you use a different mic.
+A lightning-fast, highly accurate speech-to-text tool for Linux (X11/KDE/GNOME).  
+Powered by **Groq API** (Whisper Large V3) for near-instant transcription, with seamless fallback support and a modern GUI.
 
 ---
 
-# Linux Speech-to-Text Tool (日本語)
+## ✨ Features
 
-Linux (Kubuntu/KDEで動作確認済み) 向けの、爆速かつ高精度な音声入力ツールです。  
-**Groq API** (Whisper Large V3) を使用することで、ほぼ遅延のない文字起こしを実現し、アクティブなウィンドウに自動入力します。
+- **🚀 Ultra Fast**: Transcription in < 0.5s via Groq's LPU.
+- **🎯 High Accuracy**: Uses OpenAI's Whisper Large V3 (via Groq) or Whisper-1 (via OpenAI).
+- **🖥️ Modern GUI**: Easily configure API keys, microphone devices, and settings using a Flet-based interface.
+- **🔄 Multi-API Fallback**: Automatically tries multiple APIs (Groq -> OpenAI -> etc.) if one fails.
+- **⌨️ Global Hotkey**: Trigger recording with a customizable hotkey (default: `Ctrl+Alt+Space`).
+- **📋 Smart Typing**: Pastes text via clipboard for perfect Japanese/Kanji support, then **automatically restores your original clipboard**.
+- **🌐 Cross-Platform Core**: Designed with portability in mind.
 
-## 特徴
+---
 
-- **グローバルホットキー**: `Ctrl` + `Alt` + `Space` で録音開始/停止。
-- **爆速**: GroqのLPUを使用し、0.5秒以下で文字起こし完了。
-- **高精度**: OpenAIのWhisper Large V3モデルを採用。
-- **スマート入力**: クリップボード経由で貼り付けるため、日本語（漢字）も文字化けせず完璧に入力されます。入力後は**元のクリップボードの内容を自動復元**します。
-- **マイク自動検出**: "Blue Yeti" マイクを優先的に検出して使用します（設定可）。
+## 🛠️ Requirements
 
-## 動作要件
+- **OS**: Linux (X11 recommended).
+- **Python**: 3.8 or higher.
+- **Dependencies**: `xdotool`, `xclip`, `portaudio19-dev`.
+- **API Keys**: [Groq](https://console.groq.com/keys) (Free) and/or [OpenAI](https://platform.openai.com/).
 
-- Linux (X11環境推奨) - Wayland環境では `xdotool` が動作しないため工夫が必要です。
-- Python 3.8以上
-- [Groq API キー](https://console.groq.com/keys) (現在Beta版で無料利用可能)。
-- システムパッケージ: `xdotool`, `xclip`, `portaudio19-dev`
+---
 
-## インストール方法
+## 🚀 Quick Start
 
-1. **リポジトリをクローン**:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/linux-groq-stt.git
-   cd linux-groq-stt
-   ```
+### 1. Installation
 
-2. **システムパッケージのインストール**:
-   ```bash
-   sudo apt update
-   sudo apt install -y xdotool xclip portaudio19-dev python3-venv
-   ```
+```bash
+# Clone the repository
+git clone https://github.com/heppoko-wizard/linux-groq-stt.git
+cd linux-groq-stt
 
-3. **Python環境のセットアップ**:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+# Install system dependencies
+sudo apt update
+sudo apt install -y xdotool xclip portaudio19-dev python3-venv
 
-4. **APIキーの設定**:
-   プロジェクトルートに `.env` ファイルを作成します:
-   ```bash
-   cp .env.example .env
-   # .env を編集し、APIキーを貼り付けてください: GROQ_API_KEY=gsk_...
-   ```
+# Setup virtual environment
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-## 使い方
+### 2. Configuration
 
-1. **スクリプトを実行**:
-   ```bash
-   ./start_stt.sh
-   ```
-   
-2. **音声入力**:
-   - 入力したい場所（エディタ、ブラウザ、Slackなど）をクリックしてフォーカスします。
-   - **`Ctrl` + `Alt` + `Space`** を押します（開始音が鳴ります）。
-   - 話します。
-   - もう一度 **`Ctrl` + `Alt` + `Space`** を押します（終了音が鳴ります）。
-   - 文字が魔法のように入力されます！
+Launch the settings GUI to enter your API keys and select your microphone:
 
-## 設定変更
+```bash
+./start_gui.sh
+```
 
-`groq_stt.py` を編集してカスタマイズできます:
-- **ホットキー**: `<ctrl>+<alt>+<space>` の部分を変更。
-- **マイク**: 別のマイクを使う場合は `get_blue_yeti_device_id` や `SAMPLE_RATE` の値を調整してください。
+### 3. Usage
 
-## ライセンス
+Start the background listener:
 
+```bash
+./start_stt.sh
+```
+
+- **Record**: Press `Ctrl` + `Alt` + `Space` (Start sound plays).
+- **Stop**: Press `Ctrl` + `Alt` + `Space` again (Stop sound plays).
+- **Result**: The transcribed text is typed instantly into your active window.
+
+---
+
+# 🎙️ Linux Speech-to-Text Tool (日本語)
+
+Linux 向けの爆速・高精度な音声入力ツールです。  
+**Groq API** (Whisper Large V3) を活用し、ほぼ遅延のない入力を実現。フォールバック機能やモダンな設定画面も備えています。
+
+## ✨ 主な機能
+
+- **🚀 爆速転送**: Groq LPUにより、喋り終わってから0.5秒以内に文字化。
+- **🎯 最高峰の精度**: OpenAI Whisper Large V3 モデルを採用。
+- **🖥️ 設定用GUI**: マイクの選択やAPIキーの管理をモダンな画面で行えます。
+- **🔄 フォールバック**: Groqが落ちていてもOpenAI等へ自動で切り替えて試行。
+- **⌨️ グローバルホットキー**: `Ctrl+Alt+Space` でどこでも即座に録音開始。
+- **📋 クリップボード復元**: 日本語入力を確実にするためクリップボードを使用しますが、入力後は**元のクリップボード内容を自動で復元**します。
+
+## 🚀 使い方
+
+1. **設定**: `./start_gui.sh` を実行してAPIキーとマイクを設定。
+2. **起動**: `./start_stt.sh` を実行して待機。
+3. **入力**: `Ctrl+Alt+Space` を押して話し、もう一度押すと入力されます。
+
+---
+
+## 📝 License
 MIT License
