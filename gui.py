@@ -91,7 +91,7 @@ def main(page: ft.Page):
             page.update()
 
     # Save Button
-    btn_save = ft.ElevatedButton("Save Settings", on_click=save_settings, icon=ft.icons.SAVE)
+    btn_save = ft.ElevatedButton("Save Settings", on_click=save_settings, icon="save")
 
     # Layout
     page.add(
