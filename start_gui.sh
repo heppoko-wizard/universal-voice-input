@@ -1,4 +1,4 @@
 #!/bin/bash
 cd ~/ai_tools/speech_to_text
 source venv/bin/activate
-python core.py
+python gui.py
