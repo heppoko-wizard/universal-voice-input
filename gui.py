@@ -54,6 +54,13 @@ def main(page: ft.Page):
         value=config.get("language", "ja")
     )
 
+    # Speed Up Factor
+    txt_speed = ft.TextField(
+        label="Speed Up Factor (e.g. 2.0 = 2x faster)", 
+        value=str(config.get("speed_factor", 2.0)),
+        keyboard_type=ft.KeyboardType.NUMBER
+    )
+
     # Toggles
     sw_clipboard = ft.Switch(label="Restore Clipboard after typing", value=config.get("clipboard_restore", True))
 
@@ -76,6 +83,11 @@ def main(page: ft.Page):
             
             config["sample_rate"] = int(dd_sample_rate.value)
             config["language"] = dd_language.value
+            try:
+                config["speed_factor"] = float(txt_speed.value)
+            except ValueError:
+                config["speed_factor"] = 1.0 # Fallback
+                
             config["clipboard_restore"] = sw_clipboard.value
             config["hotkey"] = txt_hotkey.value
             
@@ -103,6 +115,7 @@ def main(page: ft.Page):
         ft.Text("Audio Settings", size=20, weight="bold"),
         dd_device,
         ft.Row([dd_sample_rate, dd_language], alignment="spaceBetween"),
+        txt_speed,
         ft.Divider(),
         
         ft.Text("Behavior", size=20, weight="bold"),
