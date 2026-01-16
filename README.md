@@ -1,96 +1,127 @@
-# 🎙️ Linux Speech-to-Text Tool (v2.2)
+# 🎙️ Cross-Platform AI Speech-to-Text Tool (v3.0)
 
-A lightning-fast, highly accurate speech-to-text tool for Linux (X11/KDE/GNOME).  
-Powered by **Groq API** (Whisper Large V3) for near-instant transcription, with seamless fallback support and a modern GUI.
+A lightning-fast, highly accurate speech-to-text tool for **Linux, macOS, and Windows**.  
+Supports **Local Inference** (running offline on your GPU/CPU) and **Cloud APIs** (Groq/OpenAI), giving you the best of both worlds.
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- **🚀 Ultra Fast**: Transcription in < 0.5s via Groq's LPU.
-- **⚡ Cost & Time Efficient**: **Audio Speed-Up** feature compresses audio time (default 2x) before sending, saving API costs and reducing latency.
-- **🎯 High Accuracy**: Uses OpenAI's Whisper Large V3 (via Groq) or Whisper-1 (via OpenAI).
-- **🎤 Auto Mic Selection**: Automatically detects and selects the active microphone with the best audio level at startup.
-- **🔴 Visual Feedback**: Displays a prominent **Red Frame** overlay on screen while recording, so you never forget you're on air.
-- **🖥️ Modern GUI**: Easily configure API keys, speed factor, microphone devices, and settings using a Flet-based interface.
-- **🔄 Multi-API Fallback**: Automatically tries multiple APIs (Groq -> OpenAI -> etc.) if one fails.
-- **⌨️ Global Hotkey**: Trigger recording with a customizable hotkey (default: `Alt+Space`).
-- **📋 Smart Typing**: Pastes text via clipboard for perfect Japanese/Kanji support, then **automatically restores your original clipboard**.
+- **🚀 Dual Mode Inference**:
+  - **Local Mode (New)**: Runs offline using `Faster-Whisper` (CTranslate2). Zero latency, zero cost.
+  - **Cloud Mode**: Powered by **Groq API** (Whisper Large V3) for ultra-fast cloud transcription.
+  
+- **🎮 GPU & Memory Optimization**:
+  - **GPU Acceleration**: Utilizes CUDA (NVIDIA) with Float16 quantization for blazing speeds.
+  - **Transient Mode**: Automatically unloads the model from VRAM after transcription to free up resources for games or Stable Diffusion.
+  - **RAM Cache**: Keeps model files in system RAM for instant loading, even when "Transient Mode" is active.
+
+- **🖥️ Cross-Platform**:
+  - **Linux**: X11/Wayland support, systemd service integration.
+  - **Windows**: Background task, startup shortcut.
+  - **macOS**: LaunchAgent support.
+
+- **🎤 Smart Features**:
+  - **Auto Mic Selection**: Detects the best active microphone.
+  - **Visual Overlay**: Displays a "Recording" indicator (Linux only).
+  - **Global Hotkey**: Customizable trigger (default: `Ctrl+Shift+Space`).
+  - **Smart Typing**: Pastes text via clipboard for perfect Japanese/Kanji support.
 
 ---
 
 ## 🛠️ Requirements
 
-- **OS**: Linux (X11 recommended).
-- **Python**: 3.8 or higher.
-- **Dependencies**: `xdotool`, `xclip`, `portaudio19-dev`, `ffmpeg`.
-- **API Keys**: [Groq](https://console.groq.com/keys) (Free) and/or [OpenAI](https://platform.openai.com/).
+- **Python**: 3.10 or higher.
+- **FFmpeg**: Required for audio processing.
+- **NVIDIA GPU (Optional)**: For local acceleration (requires CUDA Toolkit 12+).
 
 ---
 
-## 🚀 Quick Start
+## 🚀 Installation
 
-### 1. Installation
+### 1. Clone & Setup
+
+Download the repository and run the setup script for your OS.
+
+#### 🐧 Linux
 
 ```bash
-# Clone the repository
 git clone https://github.com/heppoko-wizard/linux-groq-stt.git
 cd linux-groq-stt
-
-# Install system dependencies
-sudo apt update
-sudo apt install -y xdotool xclip portaudio19-dev python3-venv ffmpeg
-
-# Setup virtual environment
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+chmod +x setup_linux.sh
+./setup_linux.sh
 ```
 
-### 2. Configuration
-
-Launch the settings GUI to enter your API keys and select your microphone:
+#### 🍎 macOS
 
 ```bash
-./start_gui.sh
+git clone https://github.com/heppoko-wizard/linux-groq-stt.git
+cd linux-groq-stt
+chmod +x setup_macos.sh
+./setup_macos.sh
 ```
 
-- **Speed Factor**: Set audio playback speed (e.g., `2.0` for 2x speed) to save costs.
-- **Device**: Set to "Default" to enable **Auto Selection** at startup.
+#### 🪟 Windows
 
-### 3. Usage
+Run `setup_windows.ps1` as Administrator in PowerShell:
 
-Start the background listener:
-
-```bash
-./start_stt.sh
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\setup_windows.ps1
 ```
-
-- **Record**: Press `Alt` + `Space` (Start sound plays & Red Frame appears).
-- **Stop**: Press `Alt` + `Space` again (Stop sound plays & Red Frame vanishes).
-- **Result**: The transcribed text is typed instantly into your active window.
 
 ---
 
-# 🎙️ Linux Speech-to-Text Tool (日本語)
+## ⚙️ Configuration
 
-Linux 向けの爆速・高精度な音声入力ツールです。  
-**Groq API** (Whisper Large V3) を活用し、ほぼ遅延のない入力を実現。フォールバック機能やモダンな設定画面も備えています。
+Launch the GUI settings manager:
 
-## ✨ v2.2 新機能
+```bash
+# Linux / macOS
+./start_gui.sh
 
-- **⚡ 倍速送信機能**: 録音データを自動で倍速（デフォルト2倍）に圧縮してAPIへ送信。**API料金の節約**と**レスポンス向上**を実現。
-- **🎤 マイク自動選択**: 起動時に全マイクをテストし、最も音量の大きいマイクを自動で選択します（設定で「Default」選択時）。
-- **🔴 録音中オーバーレイ**: 録音中は画面中央に**赤い枠**が表示されるため、録音の切り忘れを防げます。
-- **⌨️ ホットキー変更**: デフォルトを `Alt + Space` に変更しました（GUIで変更可能）。
+# Windows
+.\start_gui.bat
+```
 
-## 🚀 使い方
+### Recommended Settings
 
-1. **設定**: `./start_gui.sh` を実行してAPIキーとマイクを設定。
-2. **起動**: `./start_stt.sh` を実行して待機。
-3. **入力**: `Alt + Space` を押して話し（赤い枠が表示されます）、もう一度押すと入力されます。
+| Feature | Setting | Description |
+| :--- | :--- | :--- |
+| **Local Inference** | `ON` | Use offline model (Faster-Whisper). |
+| **Inference Device** | `GPU (CUDA)` | Select GPU for speed. (Use CPU if no GPU) |
+| **Keep Model Loaded** | `OFF` | **Unloads VRAM** after use. Great for gamers/AI artists. |
+| **Force RAM Cache** | `ON` | Keeps files in RAM. **Eliminates load time** when "Keep Model Loaded" is OFF. |
+
+---
+
+## 🎤 Usage
+
+The tool runs in the background.
+
+1. **Start Recording**: Press `Ctrl` + `Shift` + `Space` (Customizable).
+   - A sound will play indicating recording started.
+2. **Speak**: Speak naturally.
+3. **Stop Recording**: Press the hotkey again.
+   - Processing sound plays.
+   - Text is typed into your active window.
+
+---
+
+## 🧩 Advanced: Memory Management strategy
+
+If you want to use **Stable Diffusion** or play **Heavy Games** while using STT, use this configuration:
+
+1. **Keep Model Loaded (VRAM)**: `OFF` -> VRAM is empty when not talking.
+2. **Force RAM Cache**: `ON` -> System RAM holds the model data.
+3. **Prepare Model**: The system pre-loads the model *while you are speaking*.
+
+**Result**: Zero impact on GPU performance while gaming, but instant transcription when needed.
 
 ---
 
 ## 📝 License
+
 MIT License
