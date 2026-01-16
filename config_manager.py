@@ -15,7 +15,13 @@ DEFAULT_CONFIG = {
     "sample_rate": 44100,
     "language": "ja",
     "hotkey": "<ctrl>+<alt>+<space>",
-    "clipboard_restore": True
+    "clipboard_restore": True,
+    "use_local_model": False,
+    "local_model_size": "base",
+    "local_device": "cpu",
+    "local_compute_type": "int8",
+    "local_always_loaded": True,
+    "local_ram_cache": False
 }
 
 def load_config():
@@ -39,12 +45,34 @@ def save_config(config):
         json.dump(config, f, indent=4)
 
 def get_input_devices():
+    input_devices = []
+    
+    # 1. Try PortAudio (sounddevice)
     try:
         devices = sd.query_devices()
-        input_devices = []
         for i, dev in enumerate(devices):
             if dev['max_input_channels'] > 0:
                 input_devices.append({"id": i, "name": dev['name']})
-        return input_devices
     except Exception:
-        return []
+        pass
+
+    # 2. Try PulseAudio (pactl) as fallback/supplement for Linux
+    if os.name == 'posix':
+        try:
+            import subprocess
+            cmd = "LANG=C pactl list sources | grep -E 'Name:|Description:'"
+            output = subprocess.check_output(cmd, shell=True).decode()
+            
+            lines = output.splitlines()
+            for i in range(0, len(lines), 2):
+                if i + 1 < len(lines):
+                    name = lines[i].split("Name: ")[1].strip()
+                    desc = lines[i+1].split("Description: ")[1].strip()
+                    
+                    # Avoid duplicates and monitor devices
+                    if not name.endswith(".monitor") and not any(d['name'] == desc for d in input_devices):
+                        input_devices.append({"id": name, "name": f"[Pulse] {desc}"})
+        except Exception:
+            pass
+            
+    return input_devices
