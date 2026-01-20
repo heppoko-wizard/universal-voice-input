@@ -1,53 +1,80 @@
 import flet as ft
 import config_manager
 import os
+import threading
 
 def main(page: ft.Page):
-    page.title = "Speech-to-Text Settings"
-    page.window_width = 500
-    page.window_height = 700
+    page.title = "STT Config Editor"
+    page.window.width = 600
+    page.window.height = 800
     page.scroll = "auto"
-    page.theme_mode = ft.ThemeMode.DARK # Modern dark theme
-
+    page.theme_mode = ft.ThemeMode.DARK
+    
     config = config_manager.load_config()
     devices = config_manager.get_input_devices()
 
     # --- UI Elements ---
     
-    # API Keys Section
+    # API Keys
     api_groq = ft.TextField(label="Groq API Key", password=True, can_reveal_password=True, value=config["api_keys"].get("groq", ""))
-    api_openai = ft.TextField(label="OpenAI API Key", password=True, can_reveal_password=True, value=config["api_keys"].get("openai", ""))
     
-    # Local Inference UI
-    cb_local = ft.Checkbox(label="Use Local Model (Offline)", value=config.get("use_local_model", False))
-    sw_always_loaded = ft.Switch(label="Keep Model Loaded (Faster Response)", value=config.get("local_always_loaded", True))
-    sw_ram_cache = ft.Switch(label="Force RAM Cache (Keep files in memory)", value=config.get("local_ram_cache", False))
+    # Local Inference settings
+    cb_local = ft.Checkbox(label="Use Local Model", value=config.get("use_local_model", True))
     
-    dd_local_device = ft.Dropdown(
-        label="Inference Device",
+    # Optimization Mode Dropdown (順序: Local → CPU → Hybrid → Persistent)
+    opt_mode_value = "zero"
+    if config.get("local_always_loaded"):
+        opt_mode_value = "always"
+    elif config.get("hybrid_mode"):
+        opt_mode_value = "hybrid"
+    elif config.get("local_ram_cache"):
+        opt_mode_value = "cpu"
+        
+    dd_opt_mode = ft.Dropdown(
+        label="Optimization Mode",
         options=[
-            ft.dropdown.Option("cpu", "CPU"),
-            ft.dropdown.Option("cuda", "GPU (CUDA)"),
+            ft.dropdown.Option("zero", "1. Zero Memory (毎回読込, VRAM 0MB)"),
+            ft.dropdown.Option("cpu", "2. CPU Cache (効果薄, RAM 1.5GB)"),
+            ft.dropdown.Option("hybrid", "3. Hybrid (自動消滅, 使用中のみVRAM)"),
+            ft.dropdown.Option("always", "4. Persistent (常駐, VRAM 700MB)"),
         ],
-        value=config.get("local_device", "cpu")
+        value=opt_mode_value,
+        hint_text="Select how the model is managed in memory"
+    )
+
+    # Hybrid Timeout Slider (10秒単位, 10〜600秒)
+    hybrid_timeout_val = config.get("hybrid_timeout", 300)
+    slider_timeout = ft.Slider(
+        min=10, max=600, divisions=59, label="{value}秒",
+        value=hybrid_timeout_val,
+    )
+    txt_timeout_display = ft.Text(f"自動消滅: {hybrid_timeout_val}秒")
+    
+    def on_timeout_change(e):
+        txt_timeout_display.value = f"自動消滅: {int(slider_timeout.value)}秒"
+        page.update()
+    slider_timeout.on_change = on_timeout_change
+    
+    hybrid_timeout_row = ft.Row(
+        [txt_timeout_display, slider_timeout],
+        visible=(opt_mode_value == "hybrid")
     )
     
-    # Compute type is now auto-selected based on device (int8 for CPU, float16 for GPU)
-    
-    dd_local_model = ft.Dropdown(
-        label="Local Model Size",
-        options=[
-            ft.dropdown.Option("tiny"),
-            ft.dropdown.Option("base"),
-            ft.dropdown.Option("small"),
-            ft.dropdown.Option("medium"),
-            ft.dropdown.Option("large-v3"),
-            # Assuming these will be auto-converted or downloaded if valid Hf Hub IDs
-            ft.dropdown.Option("kotoba-tech/kotoba-whisper-v1.0-faster", "Kotoba-Whisper v1.0 (Japanese Optimized)"),
-            ft.dropdown.Option("kotoba-tech/kotoba-whisper-v2.0-faster", "Kotoba-Whisper v2.0 (Japanese Optimized)"),
-        ],
-        value=config.get("local_model_size", "base")
+    def on_mode_change(e):
+        hybrid_timeout_row.visible = (dd_opt_mode.value == "hybrid")
+        page.update()
+    dd_opt_mode.on_change = on_mode_change
+
+    # Audio Settings
+    txt_speed = ft.TextField(
+        label="Speed Up Factor (e.g. 1.5)", 
+        value=str(config.get("speed_factor", 1.0)),
+        keyboard_type=ft.KeyboardType.NUMBER,
+        hint_text="1.0 = Normal, 2.0 = Double Speed"
     )
+
+    # Int8 Model Path
+    txt_model_path = ft.TextField(label="Local Model Path", value=config.get("local_model_size", "models/kotoba-whisper-v2.2-int8"), read_only=True)
     
     # Device Selection
     device_options = [ft.dropdown.Option(key="default", text="Default System Device")]
@@ -55,7 +82,6 @@ def main(page: ft.Page):
         device_options.append(ft.dropdown.Option(key=str(d["id"]), text=f"{d['name']}"))
     
     current_device = str(config.get("device_index")) if config.get("device_index") is not None else "default"
-    # Handle case where saved device index no longer exists
     if not any(d.key == current_device for d in device_options):
         current_device = "default"
         
@@ -65,47 +91,15 @@ def main(page: ft.Page):
         value=current_device,
     )
 
-    # Audio Settings
-    dd_sample_rate = ft.Dropdown(
-        label="Sample Rate",
-        options=[
-            ft.dropdown.Option("16000"),
-            ft.dropdown.Option("44100"),
-            ft.dropdown.Option("48000"),
-        ],
-        value=str(config.get("sample_rate", 44100))
-    )
-    
-    dd_language = ft.Dropdown(
-        label="Language",
-        options=[
-            ft.dropdown.Option("ja", "Japanese"),
-            ft.dropdown.Option("en", "English"),
-        ],
-        value=config.get("language", "ja")
-    )
+    # Hotkey
+    txt_hotkey = ft.TextField(label="Global Hotkey", value=config.get("hotkey", "<ctrl>+<alt>+<space>"))
 
-    # Speed Up Factor
-    txt_speed = ft.TextField(
-        label="Speed Up Factor (e.g. 2.0 = 2x faster)", 
-        value=str(config.get("speed_factor", 2.0)),
-        keyboard_type=ft.KeyboardType.NUMBER
-    )
-
-    # Toggles
-    sw_clipboard = ft.Switch(label="Restore Clipboard after typing", value=config.get("clipboard_restore", False))
-
-    # Hotkey (Simple Text Input for now)
-    txt_hotkey = ft.TextField(label="Global Hotkey (e.g. <ctrl>+<alt>+<space>)", value=config.get("hotkey", "<ctrl>+<alt>+<space>"))
-
-    # Status Text
-    status_text = ft.Text(value="Settings loaded.", color="green")
+    # Status
+    status_text = ft.Text(value="Ready.", color="green")
 
     def save_settings(e):
         try:
-            # Update config dict
             config["api_keys"]["groq"] = api_groq.value
-            config["api_keys"]["openai"] = api_openai.value
             
             if dd_device.value == "default":
                 config["device_index"] = None
@@ -113,30 +107,42 @@ def main(page: ft.Page):
                 try:
                     config["device_index"] = int(dd_device.value)
                 except ValueError:
-                    # It's a PulseAudio name (string)
                     config["device_index"] = dd_device.value
             
-            config["sample_rate"] = int(dd_sample_rate.value)
-            config["language"] = dd_language.value
             try:
                 config["speed_factor"] = float(txt_speed.value)
             except ValueError:
-                config["speed_factor"] = 1.0 # Fallback
-                
-            config["clipboard_restore"] = sw_clipboard.value
-            config["hotkey"] = txt_hotkey.value
+                config["speed_factor"] = 1.0
             
-            # Local Config
+            config["hotkey"] = txt_hotkey.value
             config["use_local_model"] = cb_local.value
-            config["local_always_loaded"] = sw_always_loaded.value
-            config["local_ram_cache"] = sw_ram_cache.value
-            config["local_device"] = dd_local_device.value
-            # compute_type is now auto-selected in transcriber based on device
-            config["local_model_size"] = dd_local_model.value
+            
+            # Update optimized settings based on mode
+            mode = dd_opt_mode.value
+            if mode == "zero":
+                config["local_always_loaded"] = False
+                config["local_ram_cache"] = False
+                config["hybrid_mode"] = False
+            elif mode == "cpu":
+                config["local_always_loaded"] = False
+                config["local_ram_cache"] = True
+                config["hybrid_mode"] = False
+            elif mode == "hybrid":
+                config["local_always_loaded"] = False
+                config["local_ram_cache"] = False
+                config["hybrid_mode"] = True
+                config["hybrid_timeout"] = int(slider_timeout.value)
+            elif mode == "always":
+                config["local_always_loaded"] = True
+                config["local_ram_cache"] = False
+                config["hybrid_mode"] = False
+            
+            config["local_compute_type"] = "int8"
+            config["local_model_size"] = txt_model_path.value
             
             config_manager.save_config(config)
             
-            status_text.value = "Settings saved! Restart the tool to apply."
+            status_text.value = "Settings Saved. Please restart the Daemon to apply."
             status_text.color = "blue"
             page.update()
             
@@ -145,94 +151,74 @@ def main(page: ft.Page):
             status_text.color = "red"
             page.update()
 
-    # Save Button
-    btn_save = ft.ElevatedButton("Save Settings", on_click=save_settings, icon="save")
-
-    # --- Logic for Download ---
+    btn_save = ft.ElevatedButton("Save Configuration", on_click=save_settings, icon="save")
     
-    download_progress = ft.ProgressRing(visible=False)
-    download_status = ft.Text(value="", color="blue")
-    
-    def run_download(model_size):
-        try:
-            # Import here to avoid early crash if not installed, though we expect it is
-            from faster_whisper import download_model
-            
-            # Special handling for custom paths/IDs if needed in future
-            # For now directly pass the value
-            print(f"Downloading {model_size}...")
-            download_model(model_size)
-            
-            page.run_task(handle_download_success)
-        except Exception as e:
-            print(f"Download failed: {e}")
-            page.run_task(lambda: handle_download_error(str(e)))
+    # Model Setup Utility
+    def run_converter(e):
+        # This is a helper to run the conversion script if needed
+        def _task():
+            import subprocess
+            try:
+                txt_console.value = "Starting conversion...\n"
+                page.update()
+                
+                process = subprocess.Popen(
+                    ["python", "convert_model.py"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    cwd=os.getcwd()
+                )
+                
+                for line in process.stdout:
+                    txt_console.value += line
+                    page.update()
+                    
+                process.wait()
+                if process.returncode == 0:
+                    txt_console.value += "\nSUCCESS: Model converted."
+                else:
+                    txt_console.value += f"\nFAILED: Exit code {process.returncode}"
+                    stderr = process.stderr.read()
+                    txt_console.value += f"\nError: {stderr}"
+                
+                page.update()
 
-    async def handle_download_success():
-        download_progress.visible = False
-        download_status.value = "Download Complete! Ready to use."
-        download_status.color = "green"
-        btn_download.disabled = False
-        page.update()
+            except Exception as ex:
+                txt_console.value += f"\nException: {ex}"
+                page.update()
 
-    async def handle_download_error(err_msg):
-        download_progress.visible = False
-        download_status.value = f"Error: {err_msg}"
-        download_status.color = "red"
-        btn_download.disabled = False
-        page.update()
+        threading.Thread(target=_task, daemon=True).start()
 
-    def on_download_click(e):
-        model_size = dd_local_model.value
-        if not model_size:
-            return
-            
-        btn_download.disabled = True
-        download_progress.visible = True
-        download_status.value = f"Downloading {model_size}... (This may take a while)"
-        download_status.color = "blue"
-        page.update()
-        
-        # Run in thread
-        import threading
-        threading.Thread(target=run_download, args=(model_size,), daemon=True).start()
-
-    btn_download = ft.ElevatedButton("Pre-download Selected Model", on_click=on_download_click, icon="download")
-
+    btn_convert = ft.ElevatedButton("Setup/Update Local Model (Downloads & Optimizes)", on_click=run_converter, icon="download")
+    txt_console = ft.Text(value="", font_family="Consolas", size=12)
 
     # Layout
     page.add(
-        ft.Text("API Configuration", size=20, weight="bold"),
+        ft.Text("STT Configuration", size=24, weight="bold"),
+        ft.Divider(),
+        ft.Text("General", size=18, weight="bold"),
         api_groq,
-        api_openai,
-        ft.Divider(),
-        
-        ft.Text("Local Inference (CPU/Faster-Whisper)", size=20, weight="bold"),
-        cb_local,
-        sw_always_loaded,
-        sw_ram_cache,
-        dd_local_device,
-        dd_local_model,
-        ft.Row([btn_download, download_progress], alignment="start", vertical_alignment="center"),
-        download_status,
-        ft.Divider(),
-        
-        ft.Text("Audio Settings", size=20, weight="bold"),
         dd_device,
-        ft.Row([dd_sample_rate, dd_language], alignment="spaceBetween"),
+        txt_hotkey,
         txt_speed,
         ft.Divider(),
-        
-        ft.Text("Behavior", size=20, weight="bold"),
-        txt_hotkey,
-        sw_clipboard,
+        ft.Text("Local Model (Optimized)", size=18, weight="bold"),
+        cb_local,
+        dd_opt_mode,
+        hybrid_timeout_row,
+        txt_model_path,
+        btn_convert,
+        ft.Container(
+            content=txt_console,
+            bgcolor=ft.Colors.BLACK54,
+            padding=10,
+            border_radius=5,
+        ),
         ft.Divider(),
-        
         ft.Row([btn_save], alignment="center"),
         ft.Row([status_text], alignment="center"),
     )
 
-    # Flet app entry point
-
 if __name__ == "__main__":
-    ft.app(main)
+    ft.app(target=main)

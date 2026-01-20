@@ -16,6 +16,7 @@ from transcriber import Transcriber
 is_recording = False
 audio_data = []
 stream = None
+active_notification_id = None
 config = config_manager.load_config()
 transcriber_instance = Transcriber(config)
 
@@ -26,7 +27,7 @@ def audio_callback(indata, frames, time, status):
         audio_data.append(indata.copy())
 
 def start_recording():
-    global is_recording, audio_data, stream, config, transcriber_instance
+    global is_recording, audio_data, stream, config, transcriber_instance, active_notification_id
     if is_recording:
         return
 
@@ -36,7 +37,9 @@ def start_recording():
     
     print("--- Starting Recording ---")
     platform_utils.play_sound("start")
-    platform_utils.notify("STT Recording", "STARTED...")
+    
+    # 既存の通知があれば上書き、なければ新規作成
+    active_notification_id = platform_utils.notify("STT Recording", "STARTED...", replaces_id=active_notification_id, timeout=0)  # 0 = 消えない
     
     # Pre-load model in background if transient mode
     threading.Thread(target=transcriber_instance.prepare_model).start()
@@ -84,47 +87,69 @@ def start_recording():
         is_recording = False
 
 def stop_and_transcribe():
-    global is_recording, stream
+    global is_recording, stream, active_notification_id
     if not is_recording:
         return
 
     print("--- Stopping Recording ---")
     is_recording = False
     
-    platform_utils.notify("STT Recording", "STOPPED (Processing...)")
+    print("[DEBUG] Notifying user...")
+    # 通知を上書き
+    active_notification_id = platform_utils.notify("STT Recording", "STOPPED (Processing...)", replaces_id=active_notification_id, timeout=2000)  # 2秒
 
-    if stream:
-        try:
-            stream.stop()
-            stream.close()
-        except Exception:
-            pass
-    
-    platform_utils.play_sound("stop")
-    threading.Thread(target=process_audio).start()
+    def _close_stream_thread():
+        global stream
+        if stream:
+            try:
+                print("[DEBUG] Aborting stream (Thread)...")
+                stream.abort()  # stop()の代わりにabort()を使用
+                print("[DEBUG] Stream aborted. Closing stream...")
+                stream.close()
+                print("[DEBUG] Stream closed.")
+            except Exception as e:
+                print(f"[DEBUG] Error closing stream: {e}")
+                pass
+        
+        print("[DEBUG] Playing stop sound...")
+        platform_utils.play_sound("stop")
+        print("[DEBUG] Starting processing thread...")
+        threading.Thread(target=process_audio).start()
+        print("[DEBUG] Processing thread started.")
+
+    # pynputのスレッドをブロックしないように、ストリーム停止も別スレッドに委譲
+    threading.Thread(target=_close_stream_thread).start()
 
 def process_audio():
-    global config, transcriber_instance
-    print("Processing audio...")
+    global config, transcriber_instance, active_notification_id
+    print("[DEBUG] process_audio started")
     if not audio_data:
+        print("[DEBUG] No audio data, returning")
         return
 
+    print("[DEBUG] Concatenating audio...")
     recording = np.concatenate(audio_data, axis=0)
     samplerate = config.get("sample_rate", 44100)
 
+    print("[DEBUG] Writing temp file...")
     with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp_file:
         temp_filename = tmp_file.name
         data_int16 = (recording * 32767).astype(np.int16)
         write(temp_filename, samplerate, data_int16)
     
+    print(f"[DEBUG] Temp file written: {temp_filename}")
+    
     # Process for Speed Up (Time Compression)
     speed_factor = config.get("speed_factor", 2.0)
     final_filename = temp_filename
+    
+    print(f"[DEBUG] speed_factor = {speed_factor}, platform = {platform_utils.get_platform()}")
     
     if speed_factor > 1.05 and platform_utils.get_platform() == "linux": # Check ffmpeg availability?
         # TODO: Add cross-platform ffmpeg check or pure python speedup
         # For now, keep existing logic but wrapped in try
         try:
+             print("[DEBUG] Checking ffmpeg...")
              # Basic FFmpeg check
              if subprocess.run(["ffmpeg", "-version"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
                 print(f"Applying speed up x{speed_factor}...")
@@ -143,12 +168,17 @@ def process_audio():
         text = transcriber_instance.transcribe(final_filename)
         
         if text:
+            # 完了したので通知を更新（または消去）
+            active_notification_id = platform_utils.notify("STT Success", f"Typed: {text[:30]}...", replaces_id=active_notification_id, timeout=2000)  # 2秒
             type_text(text)
         else:
             print("Transcription failed.")
+            active_notification_id = platform_utils.notify("STT Error", "Transcription failed.", replaces_id=active_notification_id, timeout=2000)  # 2秒
             platform_utils.play_sound("error")
             
     finally:
+        # しばらくしたら消えるようにタイムアウト付きで出し直すか、そのまま放置（3秒設定なので自動で消えるはず）
+        pass
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
         if final_filename != temp_filename and os.path.exists(final_filename):
@@ -185,16 +215,36 @@ def main():
     print(f"Hotkey: {hotkey_str}")
 
     try:
-        with keyboard.GlobalHotKeys({
+        listener = keyboard.GlobalHotKeys({
             hotkey_str: on_toggle
-        }) as h:
-            h.join()
+        })
+        listener.start()
+        
+        # ビジーループ防止: メインスレッドでsleepしながら待機
+        print("Hotkey listener started. Press Ctrl+C to exit.")
+        while listener.is_alive():
+            time.sleep(1.0)  # CPU負荷を最小限に（1秒間隔で十分）
+            
     except ValueError:
         print(f"Invalid hotkey: {hotkey_str}. Using default.")
-        with keyboard.GlobalHotKeys({
+        listener = keyboard.GlobalHotKeys({
             '<ctrl>+<alt>+<space>': on_toggle
-        }) as h:
-            h.join()
+        })
+        listener.start()
+        
+        print("Hotkey listener started (default). Press Ctrl+C to exit.")
+        while listener.is_alive():
+            time.sleep(1.0)  # CPU負荷を最小限に（1秒間隔で十分）
+    
+    except KeyboardInterrupt:
+        print("\nShutting down gracefully...")
+        if 'listener' in locals() and listener.is_alive():
+            listener.stop()
+    
+    except Exception as e:
+        print(f"Error in main loop: {e}")
+        if 'listener' in locals() and listener.is_alive():
+            listener.stop()
 
 if __name__ == "__main__":
     main()

@@ -5,3 +5,4 @@ numpy
 pyperclip
 pynput
 python-dotenv
+faster-whisper

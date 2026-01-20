@@ -12,18 +12,41 @@ def get_platform():
         return "windows"
     return "unknown"
 
-def notify(title, message):
+def notify(title, message, replaces_id=None, timeout=3000):
     plat = get_platform()
     try:
         if plat == "linux":
-            subprocess.run(["notify-send", title, message], stderr=subprocess.DEVNULL)
+            # -p: 通知IDを出力する
+            # -t: タイムアウト（ミリ秒）、0 = 消えない
+            cmd = ["notify-send", "-p", "-t", str(timeout)]
+            if replaces_id:
+                cmd.extend(["-r", str(replaces_id)])
+            cmd.extend([title, message])
+            
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            new_id = result.stdout.strip()
+            return new_id if new_id else replaces_id
         elif plat == "mac":
             script = f'display notification "{message}" with title "{title}"'
             subprocess.run(["osascript", "-e", script], stderr=subprocess.DEVNULL)
-        elif plat == "windows":
-            # Simple fallback for Windows (PowerShell toaster is complex without external script)
-            # Maybe just print or use plyer if available. 
-            print(f"[{title}] {message}")
+    except Exception:
+        pass
+    return replaces_id
+
+def unnotify(notify_id):
+    """通知を強制的に閉じる (Linux用)"""
+    if not notify_id:
+        return
+    plat = get_platform()
+    try:
+        if plat == "linux":
+            # DBusを使用して特定の通知IDを閉じる
+            # uint32を指定して確実にマッチさせる
+            subprocess.run([
+                "dbus-send", "--type=method_call", "--dest=org.freedesktop.Notifications",
+                "/org/freedesktop/Notifications", "org.freedesktop.Notifications.CloseNotification",
+                f"uint32:{notify_id}"
+            ], stderr=subprocess.DEVNULL)
     except Exception:
         pass
 

@@ -1,127 +1,59 @@
-# 🎙️ Cross-Platform AI Speech-to-Text Tool (v3.0)
+# Cross-Platform AI Speech-to-Text Tool
 
-A lightning-fast, highly accurate speech-to-text tool for **Linux, macOS, and Windows**.  
-Supports **Local Inference** (running offline on your GPU/CPU) and **Cloud APIs** (Groq/OpenAI), giving you the best of both worlds.
+A high-performance speech-to-text tool for Linux, macOS, and Windows. This tool supports both local inference using Faster-Whisper and cloud-based transcription via Groq/OpenAI APIs.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Python](https://img.shields.io/badge/python-3.8%2B-blue)
+## Key Features
 
----
+1. Advanced Notification Control
+The application now supports finer control over the notification area. Notifications remain visible during the entire recording process to provide clear status feedback.
 
-## ✨ Key Features
+2. Flexible Model Management
+The tool provides four distinct operation modes to balance performance and resource usage:
 
-- **🚀 Dual Mode Inference**:
-  - **Local Mode (New)**: Runs offline using `Faster-Whisper` (CTranslate2). Zero latency, zero cost.
-  - **Cloud Mode**: Powered by **Groq API** (Whisper Large V3) for ultra-fast cloud transcription.
-  
-- **🎮 GPU & Memory Optimization**:
-  - **GPU Acceleration**: Utilizes CUDA (NVIDIA) with Float16 quantization for blazing speeds.
-  - **Transient Mode**: Automatically unloads the model from VRAM after transcription to free up resources for games or Stable Diffusion.
-  - **RAM Cache**: Keeps model files in system RAM for instant loading, even when "Transient Mode" is active.
+- Local Load: Loads the model only when needed.
+- CPU Offload: Offloads processing to the CPU to save VRAM for other tasks like gaming or image generation.
+- Timed VRAM Retention: Keeps the model in VRAM for a specified number of seconds after transcription, then automatically unloads it.
+- Resident VRAM: Keeps the model permanently in VRAM for immediate response in subsequent transcriptions.
 
-- **🖥️ Cross-Platform**:
-  - **Linux**: X11/Wayland support, systemd service integration.
-  - **Windows**: Background task, startup shortcut.
-  - **macOS**: LaunchAgent support.
+1. GUI Enhancements
+The settings GUI has been updated to allow easy selection between the four model management modes and configuration of notification behaviors.
 
-- **🎤 Smart Features**:
-  - **Auto Mic Selection**: Detects the best active microphone.
-  - **Visual Overlay**: Displays a "Recording" indicator (Linux only).
-  - **Global Hotkey**: Customizable trigger (default: `Ctrl+Shift+Space`).
-  - **Smart Typing**: Pastes text via clipboard for perfect Japanese/Kanji support.
+2. Performance Optimization
+Utilizes GPU acceleration (CUDA) with support for local model loading to ensure low latency and high accuracy for Japanese and English transcription.
+
+## Requirements
+
+- Python 3.10 or higher
+- FFmpeg
+- NVIDIA GPU with CUDA Toolkit 12+ (Optional, for GPU acceleration)
 
 ---
 
-## 🛠️ Requirements
+# クロスプラットフォーム AI 音声認識ツール
 
-- **Python**: 3.10 or higher.
-- **FFmpeg**: Required for audio processing.
-- **NVIDIA GPU (Optional)**: For local acceleration (requires CUDA Toolkit 12+).
+Linux, macOS, Windows で動作する高性能な音声認識ツールです。Faster-Whisper によるローカル推論と、Groq/OpenAI API を使用したクラウド推論の両方に対応しています。
 
----
+## 主な機能
 
-## 🚀 Installation
+1. 高度な通知制御
+通知領域の制御が可能になりました。録音中は通知が消えることなく表示され続け、現在のステータスを確実に把握できます。
 
-### 1. Clone & Setup
+2. 柔軟なモデル管理
+パフォーマンスとリソース使用量のバランスを調整するため、以下の4つの動作モードを提供します：
 
-Download the repository and run the setup script for your OS.
+- ローカル読み込み: 必要時にのみモデルを読み込みます。
+- CPUオフロード: 処理をCPUにオフロードし、ゲームや画像生成などのためにVRAMを節約します。
+- タイマー式VRAM保持: 文字起こし終了後、指定した秒数だけモデルをVRAMに保持し、その後自動的に破棄します。
+- VRAM常駐: モデルを常にVRAMに保持し、次回の文字起こしで即座に反応できるようにします。
 
-#### 🐧 Linux
+1. GUI の改善
+設定 GUI が更新され、4つのモデル管理モードの選択や通知挙動の設定が容易に行えるようになりました。
 
-```bash
-git clone https://github.com/heppoko-wizard/linux-groq-stt.git
-cd linux-groq-stt
-chmod +x setup_linux.sh
-./setup_linux.sh
-```
+2. パフォーマンスの最適化
+GPU アクセラレーション（CUDA）を活用し、ローカルモデルの読み込みに対応することで、日本語および英語の文字起こしにおいて低遅延かつ高精度な認識を実現しています。
 
-#### 🍎 macOS
+## 必要条件
 
-```bash
-git clone https://github.com/heppoko-wizard/linux-groq-stt.git
-cd linux-groq-stt
-chmod +x setup_macos.sh
-./setup_macos.sh
-```
-
-#### 🪟 Windows
-
-Run `setup_windows.ps1` as Administrator in PowerShell:
-
-```powershell
-Set-ExecutionPolicy Bypass -Scope Process -Force
-.\setup_windows.ps1
-```
-
----
-
-## ⚙️ Configuration
-
-Launch the GUI settings manager:
-
-```bash
-# Linux / macOS
-./start_gui.sh
-
-# Windows
-.\start_gui.bat
-```
-
-### Recommended Settings
-
-| Feature | Setting | Description |
-| :--- | :--- | :--- |
-| **Local Inference** | `ON` | Use offline model (Faster-Whisper). |
-| **Inference Device** | `GPU (CUDA)` | Select GPU for speed. (Use CPU if no GPU) |
-| **Keep Model Loaded** | `OFF` | **Unloads VRAM** after use. Great for gamers/AI artists. |
-| **Force RAM Cache** | `ON` | Keeps files in RAM. **Eliminates load time** when "Keep Model Loaded" is OFF. |
-
----
-
-## 🎤 Usage
-
-The tool runs in the background.
-
-1. **Start Recording**: Press `Ctrl` + `Shift` + `Space` (Customizable).
-   - A sound will play indicating recording started.
-2. **Speak**: Speak naturally.
-3. **Stop Recording**: Press the hotkey again.
-   - Processing sound plays.
-   - Text is typed into your active window.
-
----
-
-## 🧩 Advanced: Memory Management strategy
-
-If you want to use **Stable Diffusion** or play **Heavy Games** while using STT, use this configuration:
-
-1. **Keep Model Loaded (VRAM)**: `OFF` -> VRAM is empty when not talking.
-2. **Force RAM Cache**: `ON` -> System RAM holds the model data.
-3. **Prepare Model**: The system pre-loads the model *while you are speaking*.
-
-**Result**: Zero impact on GPU performance while gaming, but instant transcription when needed.
-
----
-
-## 📝 License
-
-MIT License
+- Python 3.10 以上
+- FFmpeg
+- NVIDIA GPU および CUDA Toolkit 12以上（任意、GPU加速を利用する場合）

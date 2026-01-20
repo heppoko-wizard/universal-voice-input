@@ -22,18 +22,32 @@ class Transcriber:
     def reload_config(self, config):
         self.config = config
         
+        # デバッグ: 設定の読み込み状態を確認
+        print(f"[DEBUG] reload_config called: use_local_model = {self.config.get('use_local_model', False)}")
+        
+        # ローカルモデルを使用しない場合は即座に全てクリア
+        if not self.config.get("use_local_model", False):
+            if self.local_model is not None:
+                print("Unloading local model (Local mode disabled)...")
+                self.local_model = None
+            if self.ram_cache_model is not None:
+                print("Releasing RAM cache model (Local mode disabled)...")
+                self.ram_cache_model = None
+            return  # 早期リターンで以降の処理をスキップ
+        
+        # 以下はuse_local_model=Trueの場合のみ実行される
         should_preload = self.config.get("local_always_loaded", True)
         use_ram_cache = self.config.get("local_ram_cache", False)
         
         # 1. Handle RAM Cache (CPU Keeper)
-        if self.config.get("use_local_model", False) and HAS_LOCAL_WHISPER and use_ram_cache:
+        if HAS_LOCAL_WHISPER and use_ram_cache:
             self._ensure_ram_cache()
         elif self.ram_cache_model is not None:
              print("Releasing RAM cache model...")
              self.ram_cache_model = None
 
         # 2. Handle Active Model (GPU/CPU Inference)
-        if self.config.get("use_local_model", False) and HAS_LOCAL_WHISPER and should_preload:
+        if HAS_LOCAL_WHISPER and should_preload:
             self._load_model_if_needed()
         elif not should_preload and self.local_model is not None:
              # Unload if we switched to transient mode
@@ -45,6 +59,13 @@ class Transcriber:
         Public method to pre-load model (e.g. called on record start).
         Only useful if using transient mode to hide load latency.
         """
+        print(f"[DEBUG] prepare_model called: use_local_model = {self.config.get('use_local_model', False)}")
+        
+        # ローカルモデルを使用しない場合は何もしない
+        if not self.config.get("use_local_model", False):
+            print("[DEBUG] prepare_model: Local model disabled, skipping.")
+            return
+        
         should_preload = self.config.get("local_always_loaded", True)
         # If should_preload is True, it's already loaded by reload_config.
         # If False (Transient), we load it here in background.
@@ -69,8 +90,12 @@ class Transcriber:
             print(f"Loading local model: {model_size} ...")
             try:
                 device = self.config.get("local_device", "cpu")
-                # Auto-select optimal compute type for device
-                compute_type = "float16" if device == "cuda" else "int8"
+                
+                # Compute Type selection
+                compute_type = self.config.get("local_compute_type", "default")
+                if compute_type == "default":
+                    compute_type = "float16" if device == "cuda" else "int8"
+                
                 print(f"Loading local model: {model_size} on {device} ({compute_type}) ...")
                 self.local_model = WhisperModel(model_size, device=device, compute_type=compute_type)
                 self.current_model_size = model_size
@@ -84,6 +109,8 @@ class Transcriber:
         Transcribe audio file using configured method (Local or API).
         Returns text or None if failed.
         """
+        print(f"[DEBUG] transcribe called: use_local_model = {self.config.get('use_local_model', False)}")
+        
         # 1. Local Inference
         if self.config.get("use_local_model", False):
             if HAS_LOCAL_WHISPER:

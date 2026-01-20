@@ -21,7 +21,8 @@ DEFAULT_CONFIG = {
     "local_device": "cpu",
     "local_compute_type": "int8",
     "local_always_loaded": True,
-    "local_ram_cache": False
+    "local_ram_cache": False,
+    "local_compute_type": "int8"
 }
 
 def load_config():
