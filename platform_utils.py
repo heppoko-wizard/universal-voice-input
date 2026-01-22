@@ -137,3 +137,15 @@ def get_hotkey_map(key_string):
     # Currently pynput handles <ctrl>+<shift> etc well on all platforms.
     # macOS might use <cmd> which maps to Key.cmd
     return key_string
+
+def type_text(text):
+    """
+    Simulate typing by copying text to clipboard and pasting.
+    This is generally more reliable than simulating individual keystrokes for large text.
+    """
+    import time
+    copy_text(text)
+    # Wait a bit for clipboard to update
+    time.sleep(0.1)
+    paste_text()
+

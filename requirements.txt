@@ -6,3 +6,5 @@ pyperclip
 pynput
 python-dotenv
 faster-whisper
+pystray
+Pillow

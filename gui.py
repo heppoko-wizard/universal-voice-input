@@ -21,49 +21,50 @@ def main(page: ft.Page):
     # Local Inference settings
     cb_local = ft.Checkbox(label="Use Local Model", value=config.get("use_local_model", True))
     
-    # Optimization Mode Dropdown (順序: Local → CPU → Hybrid → Persistent)
-    opt_mode_value = "zero"
-    if config.get("local_always_loaded"):
-        opt_mode_value = "always"
-    elif config.get("hybrid_mode"):
-        opt_mode_value = "hybrid"
-    elif config.get("local_ram_cache"):
-        opt_mode_value = "cpu"
-        
-    dd_opt_mode = ft.Dropdown(
-        label="Optimization Mode",
-        options=[
-            ft.dropdown.Option("zero", "1. Zero Memory (毎回読込, VRAM 0MB)"),
-            ft.dropdown.Option("cpu", "2. CPU Cache (効果薄, RAM 1.5GB)"),
-            ft.dropdown.Option("hybrid", "3. Hybrid (自動消滅, 使用中のみVRAM)"),
-            ft.dropdown.Option("always", "4. Persistent (常駐, VRAM 700MB)"),
-        ],
-        value=opt_mode_value,
-        hint_text="Select how the model is managed in memory"
-    )
+    # Memory Management Settings
+    current_timeout = config.get("local_model_timeout", -1)
+    
+    # 内部管理用ステート
+    is_infinite = (current_timeout == -1)
+    slider_val = current_timeout if current_timeout > 0 else 0
+    
+    txt_timeout_label = ft.Text("モデル保持時間: 常時保持 (最速)", size=16)
+    
+    def update_timeout_label():
+        if cb_infinite.value:
+            txt_timeout_label.value = "モデル保持時間: 常時保持 (最速)"
+        elif slider_timeout.value == 0:
+            txt_timeout_label.value = "モデル保持時間: 0秒 (即時解放 - メモリ節約)"
+        else:
+            txt_timeout_label.value = f"モデル保持時間: {int(slider_timeout.value)}秒 (ハイブリッド)"
+        page.update()
 
-    # Hybrid Timeout Slider (10秒単位, 10〜600秒)
-    hybrid_timeout_val = config.get("hybrid_timeout", 300)
+    def on_slider_change(e):
+        update_timeout_label()
+        
+    def on_infinite_change(e):
+        slider_timeout.disabled = cb_infinite.value
+        update_timeout_label()
+        page.update()
+
     slider_timeout = ft.Slider(
-        min=10, max=600, divisions=59, label="{value}秒",
-        value=hybrid_timeout_val,
-    )
-    txt_timeout_display = ft.Text(f"自動消滅: {hybrid_timeout_val}秒")
-    
-    def on_timeout_change(e):
-        txt_timeout_display.value = f"自動消滅: {int(slider_timeout.value)}秒"
-        page.update()
-    slider_timeout.on_change = on_timeout_change
-    
-    hybrid_timeout_row = ft.Row(
-        [txt_timeout_display, slider_timeout],
-        visible=(opt_mode_value == "hybrid")
+        min=0, max=300, divisions=30, label="{value}秒",
+        value=slider_val,
+        on_change=on_slider_change,
+        disabled=is_infinite
     )
     
-    def on_mode_change(e):
-        hybrid_timeout_row.visible = (dd_opt_mode.value == "hybrid")
-        page.update()
-    dd_opt_mode.on_change = on_mode_change
+    cb_infinite = ft.Checkbox(
+        label="常時保持 (推奨)", 
+        value=is_infinite,
+        on_change=on_infinite_change
+    )
+    
+    # 初期ラベル更新
+    if not is_infinite and slider_val == 0:
+         txt_timeout_label.value = "モデル保持時間: 0秒 (即時解放 - メモリ節約)"
+    elif not is_infinite:
+         txt_timeout_label.value = f"モデル保持時間: {int(slider_val)}秒 (ハイブリッド)"
 
     # Audio Settings
     txt_speed = ft.TextField(
@@ -117,41 +118,38 @@ def main(page: ft.Page):
             config["hotkey"] = txt_hotkey.value
             config["use_local_model"] = cb_local.value
             
-            # Update optimized settings based on mode
-            mode = dd_opt_mode.value
-            if mode == "zero":
-                config["local_always_loaded"] = False
-                config["local_ram_cache"] = False
-                config["hybrid_mode"] = False
-            elif mode == "cpu":
-                config["local_always_loaded"] = False
-                config["local_ram_cache"] = True
-                config["hybrid_mode"] = False
-            elif mode == "hybrid":
-                config["local_always_loaded"] = False
-                config["local_ram_cache"] = False
-                config["hybrid_mode"] = True
-                config["hybrid_timeout"] = int(slider_timeout.value)
-            elif mode == "always":
-                config["local_always_loaded"] = True
-                config["local_ram_cache"] = False
-                config["hybrid_mode"] = False
+            # Update optimized settings based on new simple logic
+            if cb_infinite.value:
+                config["local_model_timeout"] = -1
+            else:
+                config["local_model_timeout"] = int(slider_timeout.value)
+            
+            # Remove legacy keys
+            legacy_keys = ["local_always_loaded", "local_ram_cache", "hybrid_mode", "hybrid_timeout"]
+            for key in legacy_keys:
+                if key in config:
+                    del config[key]
             
             config["local_compute_type"] = "int8"
             config["local_model_size"] = txt_model_path.value
             
             config_manager.save_config(config)
             
-            status_text.value = "Settings Saved. Please restart the Daemon to apply."
+            status_text.value = "Settings Saved. Restarting..."
             status_text.color = "blue"
             page.update()
+            
+            # デーモン側でGUIプロセス終了を検知してリロードするため、ここで閉じる
+            import time
+            time.sleep(1.0)
+            page.window.close()
             
         except Exception as ex:
             status_text.value = f"Error saving: {ex}"
             status_text.color = "red"
             page.update()
 
-    btn_save = ft.ElevatedButton("Save Configuration", on_click=save_settings, icon="save")
+    btn_save = ft.ElevatedButton("Save & Apply (Restart)", on_click=save_settings, icon="save")
     
     # Model Setup Utility
     def run_converter(e):
@@ -205,8 +203,11 @@ def main(page: ft.Page):
         ft.Divider(),
         ft.Text("Local Model (Optimized)", size=18, weight="bold"),
         cb_local,
-        dd_opt_mode,
-        hybrid_timeout_row,
+        ft.Container(height=10),
+        txt_timeout_label,
+        cb_infinite,
+        slider_timeout,
+        ft.Container(height=10),
         txt_model_path,
         btn_convert,
         ft.Container(

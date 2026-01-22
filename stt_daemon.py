@@ -1,65 +1,115 @@
 #!/usr/bin/env python3
 """
-STT Daemon - Hotkey監視 & Worker管理
-
-4つのモードをサポート:
-1. Zero Memory: 毎回ワーカーを起動して終了
-2. CPU Cache: 旧方式（ほぼZeroと同じ）
-3. Hybrid: 常駐ワーカーを使用、一定時間で自動終了
-4. Persistent: 常駐ワーカーを使用、自動終了なし（core.pyと同等）
+STT Daemon - AppIndicator Edition
+ホットキーを監視し、Unified Workerを制御する。
+AppIndicatorでシステムトレイに常駐（KDE/GNOME対応）
 """
-import signal
 import sys
-import subprocess
+import os
 import time
+import subprocess
 import threading
+import signal
+import socket
 from pynput import keyboard
 import config_manager
-import os
+import platform_utils
 
-# --- Daemon Configuration ---
-WORKER_SCRIPT = "stt_worker.py"
-WORKER_PERSISTENT_SCRIPT = "stt_worker_persistent.py"
+def check_singleton():
+    """Ensure only one instance runs using an abstract socket."""
+    # Abstract namespace socket (starts with null byte)
+    # This is automatically cleaned up by OS when process dies
+    socket_name = "\0stt_daemon_singleton_lock"
+    
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    try:
+        sock.bind(socket_name)
+        # Keep socket open to hold the lock
+        return sock 
+    except socket.error:
+        print("Another instance is already running. Exiting.")
+        sys.exit(1)
+
+# AppIndicator imports
+import gi
+gi.require_version('Gtk', '3.0')
+gi.require_version('AppIndicator3', '0.1')
+from gi.repository import Gtk, AppIndicator3, GLib
+
+# --- Configuration ---
+WORKER_SCRIPT = "stt_worker_unified.py"
+OVERLAY_SCRIPT = "status_overlay.py"
 PYTHON_CMD = sys.executable
+ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stt_icon.png")
 
-class STTDaemon:
+class OverlayManager:
     def __init__(self):
-        self.worker_process = None
-        self.worker_ready_event = threading.Event()
-        self.config = config_manager.load_config()
-        self.hotkey_str = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
-        self.running = True
-        self.recording = False
-        self.notification_id = None  # 通知IDを保持
+        self.process = None
+        self.lock = threading.Lock()
         
-        # Determine mode
-        self.hybrid_mode = self.config.get("hybrid_mode", False)
-        self.persistent_mode = self.config.get("local_always_loaded", False)
-        
-        if self.persistent_mode:
-            self.mode = "persistent"
-        elif self.hybrid_mode:
-            self.mode = "hybrid"
-        else:
-            self.mode = "zero"
-        
-        print(f"--- STT Daemon Started ---")
-        print(f"Mode: {self.mode}")
-        print(f"Hotkey: {self.hotkey_str}")
-        
-        # Preload for Hybrid/Persistent modes
-        if self.mode in ["hybrid", "persistent"]:
-            print("Preloading worker in background...")
-            self._spawn_persistent_worker()
-            
-        print("Ready. Press hotkey to Speak.")
-
-    def _spawn_persistent_worker(self):
-        """ワーカープロセスを起動（バックグラウンド）"""
+    def ensure_running(self):
+        with self.lock:
+            if self.process is None or self.process.poll() is not None:
+                self._spawn()
+    
+    def _spawn(self):
         try:
-            self.worker_ready_event.clear()
-            self.worker_process = subprocess.Popen(
-                [PYTHON_CMD, WORKER_PERSISTENT_SCRIPT],
+            print("Spawning overlay...")
+            self.process = subprocess.Popen(
+                [PYTHON_CMD, OVERLAY_SCRIPT],
+                stdin=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1,
+                cwd=os.path.dirname(os.path.abspath(__file__))
+            )
+        except Exception as e:
+            print(f"Failed to spawn overlay: {e}")
+            self.process = None
+
+    def send_command(self, cmd):
+        self.ensure_running()
+        with self.lock:
+            if self.process:
+                try:
+                    self.process.stdin.write(cmd + "\n")
+                    self.process.stdin.flush()
+                except:
+                    self.process = None
+                    
+    def cleanup(self):
+        with self.lock:
+            if self.process:
+                try:
+                    self.process.stdin.write("QUIT\n")
+                    self.process.stdin.flush()
+                    self.process.wait(timeout=1)
+                except:
+                    self.process.terminate()
+                self.process = None
+
+class WorkerManager:
+    def __init__(self, status_callback=None):
+        self.process = None
+        self.lock = threading.Lock()
+        self.status_callback = status_callback
+        self.monitor_thread = None
+        
+    def ensure_running(self):
+        with self.lock:
+            if self.process is None or self.process.poll() is not None:
+                self._spawn()
+                
+    def restart(self):
+        self.cleanup()
+        self.ensure_running()
+
+    def _spawn(self):
+        try:
+            print("Spawning worker...")
+            self.process = subprocess.Popen(
+                [PYTHON_CMD, WORKER_SCRIPT],
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
@@ -67,142 +117,171 @@ class STTDaemon:
                 bufsize=1,
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
-            # 監視スレッド開始
-            monitor_thread = threading.Thread(target=self._monitor_worker_output, daemon=True)
-            monitor_thread.start()
+            self.monitor_thread = threading.Thread(target=self._monitor_output, daemon=True)
+            self.monitor_thread.start()
+            
         except Exception as e:
-            print(f"Failed to start persistent worker: {e}")
-            self.worker_process = None
+            print(f"Failed to spawn worker: {e}")
+            self.process = None
 
-    def on_hotkey(self):
-        """ホットキーが押された時の処理"""
-        if self.mode in ["hybrid", "persistent"]:
-            self._handle_persistent_mode()
-        else:
-            self._handle_oneshot_mode()
-    
-    def _handle_oneshot_mode(self):
-        """Zero/CPUモード: 毎回ワーカーを起動・終了"""
-        if self.worker_process and self.worker_process.poll() is None:
-            # Worker is running -> STOP recording
-            print("Hotkey pressed: Stopping recording...")
-            self.worker_process.send_signal(signal.SIGINT)
-        else:
-            # Worker is dead or None -> START recording
-            print("Hotkey pressed: Starting worker...")
-            try:
-                # 環境変数を準備
-                env = os.environ.copy()
-                if self.notification_id:
-                    env["STT_NOTIFICATION_ID"] = self.notification_id
-                
-                self.worker_process = subprocess.Popen(
-                    [PYTHON_CMD, WORKER_SCRIPT],
-                    cwd=os.path.dirname(os.path.abspath(__file__)),
-                    env=env
-                )
-            except Exception as e:
-                print(f"Failed to start worker: {e}")
-    
-    def _handle_persistent_mode(self):
-        """Hybrid/Persistentモード: 常駐ワーカーにコマンドを送信"""
-        # ワーカーが起動していなければ起動
-        if self.worker_process is None or self.worker_process.poll() is not None:
-            print("Starting persistent worker...")
-            self._spawn_persistent_worker()
-            # ワーカーの準備完了を待つ (最大30秒)
-            if not self._wait_for_worker_ready():
-                # 失敗したらクリーンアップ
-                if self.worker_process:
-                    self.worker_process.terminate()
-                    self.worker_process = None
-                return
-            self.recording = False
+    def _monitor_output(self):
+        if not self.process: return
         
-        # まだ準備完了していない場合（プリロード中など）
-        if not self.worker_ready_event.is_set():
-             print("Worker is loading... Waiting.")
-             if not self._wait_for_worker_ready():
-                 return
-
-        # 録音トグル
-        if self.recording:
-            print("Sending STOP command...")
-            self._send_command("STOP")
-            self.recording = False
-        else:
-            print("Sending START command...")
-            self._send_command("START")
-            self.recording = True
-    
-    def _send_command(self, cmd):
-        """ワーカーにコマンドを送信"""
-        if self.worker_process and self.worker_process.poll() is None:
-            try:
-                self.worker_process.stdin.write(cmd + "\n")
-                self.worker_process.stdin.flush()
-            except Exception as e:
-                print(f"Failed to send command: {e}")
-    
-    def _wait_for_worker_ready(self):
-        """ワーカーの準備完了Eventを待つ"""
-        print("Waiting for worker to be ready...")
-        if self.worker_ready_event.wait(timeout=30):
-            print("Worker is ready!")
-            return True
-        else:
-            print("Worker ready timeout.")
-            return False
-    
-    def _monitor_worker_output(self):
-        """ワーカーの出力を監視するスレッド。全てのstdout読み込みはここで行う。"""
-        while self.running and self.worker_process and self.worker_process.poll() is None:
-            try:
-                # readlineはブロッキングする可能性があるので、selectを使うか、
-                # あるいは daemon=True なので単純にループで良いが、
-                # プロセス終了検知のため readline() が空文字を返したらループを抜ける
-                line = self.worker_process.stdout.readline()
-                if not line:
-                    break
-                
-                line = line.strip()
-                if line:
-                    print(f"[WORKER] {line}")
-                    if "Ready" in line:
-                         self.worker_ready_event.set()
-            except Exception as e:
-                print(f"Monitor error: {e}")
-                break
-        
-        if self.worker_process:
-            print("Worker process output stream ended.")
-    
-    def run(self):
-        # Setup Hotkey Listener
         try:
-            with keyboard.GlobalHotKeys({
-                self.hotkey_str: self.on_hotkey
-            }) as h:
-                while self.running:
-                    time.sleep(1)
+            for line in iter(self.process.stdout.readline, ''):
+                if not line: break
+                line = line.strip()
+                print(f"[WORKER] {line}")
+                
+                if line.startswith("[STATUS]"):
+                    status = line.replace("[STATUS]", "").strip()
+                    if self.status_callback:
+                        self.status_callback(status)
+        except Exception as e:
+            print(f"Monitor error: {e}")
+
+    def send_command(self, cmd):
+        self.ensure_running()
+        with self.lock:
+            if self.process and self.process.poll() is None:
+                try:
+                    self.process.stdin.write(cmd + "\n")
+                    self.process.stdin.flush()
+                except BrokenPipeError:
+                    print("Worker pipe broken. Restarting...")
+                    self.process = None
+                    self._spawn()
+                    if self.process:
+                        self.process.stdin.write(cmd + "\n")
+                        self.process.stdin.flush()
+
+    def cleanup(self):
+        with self.lock:
+            if self.process:
+                try:
+                    self.process.stdin.write("QUIT\n")
+                    self.process.stdin.flush()
+                    self.process.wait(timeout=2)
+                except:
+                    self.process.terminate()
+                self.process = None
+
+class STTDaemonAppIndicator:
+    def __init__(self):
+        self.config = config_manager.load_config()
+        self.hotkey = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
+        
+        self.overlay_mgr = OverlayManager()
+        self.worker_mgr = WorkerManager(status_callback=self.on_worker_status)
+        
+        self.recording = False
+        self.listener = None
+        
+        # AppIndicator作成
+        self.indicator = AppIndicator3.Indicator.new(
+            "stt-daemon",
+            ICON_PATH,
+            AppIndicator3.IndicatorCategory.APPLICATION_STATUS
+        )
+        self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+        
+        # メニュー作成
+        menu = Gtk.Menu()
+        
+        item_settings = Gtk.MenuItem(label="Settings")
+        item_settings.connect("activate", self.on_settings)
+        menu.append(item_settings)
+        
+        item_quit = Gtk.MenuItem(label="Exit")
+        item_quit.connect("activate", self.on_exit)
+        menu.append(item_quit)
+        
+        menu.show_all()
+        self.indicator.set_menu(menu)
+        
+        # プリロード
+        self.overlay_mgr.ensure_running()
+        self.worker_mgr.ensure_running()
+        
+        # ホットキー設定
+        self.setup_hotkey()
+        
+        print(f"--- STT Daemon (AppIndicator) ---")
+        
+    def on_worker_status(self, status):
+        self.overlay_mgr.send_command(status)
+
+    def on_activate(self):
+        if self.recording:
+            print("Hotkey: STOP")
+            self.worker_mgr.send_command("STOP")
+            self.recording = False
+        else:
+            print("Hotkey: START")
+            self.worker_mgr.send_command("START")
+            self.recording = True
+
+    def setup_hotkey(self):
+        try:
+            self.listener = keyboard.GlobalHotKeys({
+                self.hotkey: self.on_activate
+            })
+            self.listener.start()
+            print(f"Hotkey Listener Started: {self.hotkey}")
+            self.overlay_mgr.send_command("READY")
         except Exception as e:
             print(f"Hotkey Error: {e}")
-    
-    def cleanup(self):
-        """終了処理"""
-        if self.worker_process and self.worker_process.poll() is None:
-            print("Stopping worker...")
+
+    def reload_config(self):
+        print("Reloading configuration...")
+        try:
+            self.config = config_manager.load_config()
+            new_hotkey = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
+            
+            if new_hotkey != self.hotkey:
+                print(f"Hotkey changed: {self.hotkey} -> {new_hotkey}")
+                self.hotkey = new_hotkey
+                if self.listener:
+                    self.listener.stop()
+                self.listener = keyboard.GlobalHotKeys({
+                    self.hotkey: self.on_activate
+                })
+                self.listener.start()
+
+            self.worker_mgr.restart()
+            self.overlay_mgr.cleanup()
+            self.overlay_mgr.ensure_running()
+            
+        except Exception as e:
+            print(f"Reload failed: {e}")
+
+    def on_settings(self, widget):
+        def _run():
+            print("Opening GUI...")
             try:
-                self._send_command("QUIT")
-                self.worker_process.wait(timeout=5)
-            except:
-                self.worker_process.terminate()
+                subprocess.run([PYTHON_CMD, "gui.py"], cwd=os.path.dirname(os.path.abspath(__file__)))
+                print("GUI closed.")
+                GLib.idle_add(self.reload_config)
+            except Exception as e:
+                print(f"GUI Error: {e}")
+        threading.Thread(target=_run, daemon=True).start()
+
+    def on_exit(self, widget):
+        print("Exiting...")
+        if self.listener:
+            self.listener.stop()
+        self.worker_mgr.cleanup()
+        self.overlay_mgr.cleanup()
+        Gtk.main_quit()
+
+    def run(self):
+        # シグナルハンドラ設定
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
+        Gtk.main()
 
 if __name__ == "__main__":
-    daemon = STTDaemon()
-    try:
-        daemon.run()
-    except KeyboardInterrupt:
-        print("\nDaemon stopping...")
-    finally:
-        daemon.cleanup()
+    # Prevent double execution
+    lock_socket = check_singleton()
+    
+    app = STTDaemonAppIndicator()
+    app.run()
