@@ -165,7 +165,6 @@ def main(page: ft.Page):
                     del config[key]
             
             config["local_compute_type"] = "int8"
-            config["local_model_size"] = txt_model_path.value
             
             config_manager.save_config(config)
             
