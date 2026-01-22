@@ -215,12 +215,13 @@ class STTDaemonAppIndicator:
         menu.show_all()
         self.indicator.set_menu(menu)
         
+        # ホットキー設定
+        self.hotkey_mode = self.config.get("hotkey_mode", "toggle")
+        self.setup_hotkey()
+        
         # プリロード
         self.overlay_mgr.ensure_running()
         self.worker_mgr.ensure_running()
-        
-        # ホットキー設定
-        self.setup_hotkey()
         
         print(f"--- STT Daemon (AppIndicator) ---")
         
@@ -228,22 +229,63 @@ class STTDaemonAppIndicator:
         self.overlay_mgr.send_command(status)
 
     def on_activate(self):
+        """Toggle mode の動作"""
         if self.recording:
-            print("Hotkey: STOP")
+            print("Hotkey: STOP (Toggle)")
             self.worker_mgr.send_command("STOP")
             self.recording = False
         else:
-            print("Hotkey: START")
+            print("Hotkey: START (Toggle)")
             self.worker_mgr.send_command("START")
             self.recording = True
 
+    def on_press_hold(self):
+        """Hold mode の開始動作"""
+        if not self.recording:
+            print("Hotkey: START (Hold)")
+            self.worker_mgr.send_command("START")
+            self.recording = True
+
+    def on_release_hold(self):
+        """Hold mode の終了動作"""
+        if self.recording:
+            print("Hotkey: STOP (Hold)")
+            self.worker_mgr.send_command("STOP")
+            self.recording = False
+
     def setup_hotkey(self):
         try:
-            self.listener = keyboard.GlobalHotKeys({
-                self.hotkey: self.on_activate
-            })
+            # pynputのHotKeyオブジェクトを作成
+            hotkey_str = self.hotkey
+            # pynput.keyboard.HotKey.parse を通して構造化
+            keys = keyboard.HotKey.parse(hotkey_str)
+            
+            def _on_activate_wrapped():
+                if self.hotkey_mode == "hold":
+                    self.on_press_hold()
+                else:
+                    self.on_activate()
+
+            self.hotkey_obj = keyboard.HotKey(keys, _on_activate_wrapped)
+            
+            def on_press(key):
+                self.hotkey_obj.press(self.listener.canonical(key))
+            
+            def on_release(key):
+                # ホールドモードの場合、ホットキーのどれか1つでも離されたらSTOP
+                if self.hotkey_mode == "hold" and self.recording:
+                    # 離されたキーがホットキーの一部かどうか判定し、録音中なら止める
+                    # HotKey.release自体は全キー離されるまで発火しないので、独自に判定
+                    canonical_key = self.listener.canonical(key)
+                    if canonical_key in keys:
+                        self.on_release_hold()
+                
+                self.hotkey_obj.release(self.listener.canonical(key))
+
+            self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)
             self.listener.start()
-            print(f"Hotkey Listener Started: {self.hotkey}")
+            
+            print(f"Hotkey Listener Started: {self.hotkey} (Mode: {self.hotkey_mode})")
             self.overlay_mgr.send_command("READY")
         except Exception as e:
             print(f"Hotkey Error: {e}")
@@ -253,16 +295,15 @@ class STTDaemonAppIndicator:
         try:
             self.config = config_manager.load_config()
             new_hotkey = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
+            new_mode = self.config.get("hotkey_mode", "toggle")
             
-            if new_hotkey != self.hotkey:
-                print(f"Hotkey changed: {self.hotkey} -> {new_hotkey}")
+            if new_hotkey != self.hotkey or new_mode != self.hotkey_mode:
+                print(f"Hotkey updated: {self.hotkey}({self.hotkey_mode}) -> {new_hotkey}({new_mode})")
                 self.hotkey = new_hotkey
+                self.hotkey_mode = new_mode
                 if self.listener:
                     self.listener.stop()
-                self.listener = keyboard.GlobalHotKeys({
-                    self.hotkey: self.on_activate
-                })
-                self.listener.start()
+                self.setup_hotkey()
 
             self.worker_mgr.restart()
             self.overlay_mgr.cleanup()

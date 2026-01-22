@@ -85,6 +85,17 @@ def main(page: ft.Page):
         value=lang,
     )
 
+    # Hotkey Mode Selection
+    hotkey_mode = config.get("hotkey_mode", "toggle")
+    dd_hotkey_mode = ft.Dropdown(
+        label=t("hotkey_mode"),
+        options=[
+            ft.dropdown.Option(key="toggle", text=t("mode_toggle")),
+            ft.dropdown.Option(key="hold", text=t("mode_hold")),
+        ],
+        value=hotkey_mode,
+    )
+
     # Model Path
     txt_model_path = ft.TextField(label=t("model_path"), value=config.get("local_model_size", "models/kotoba-whisper-v2.2-int8"), read_only=True)
     
@@ -113,6 +124,7 @@ def main(page: ft.Page):
         try:
             config["api_keys"]["groq"] = api_groq.value
             config["ui_language"] = dd_lang.value
+            config["hotkey_mode"] = dd_hotkey_mode.value
             
             if dd_device.value == "default":
                 config["device_index"] = None
@@ -221,6 +233,7 @@ def main(page: ft.Page):
                 ft.Text(t("input_settings"), size=18, weight="bold"),
                 dd_device,
                 txt_hotkey,
+                dd_hotkey_mode,
                 txt_speed
             ])
         )
