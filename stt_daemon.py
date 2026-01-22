@@ -186,13 +186,29 @@ class STTDaemonAppIndicator:
         self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
         
         # メニュー作成
+        self.rebuild_menu()
+        
+        # プリロード
+        self.overlay_mgr.ensure_running()
+        self.worker_mgr.ensure_running()
+        
+        # ホットキー設定
+        self.setup_hotkey()
+        
+        print(f"--- STT Daemon (AppIndicator) ---")
+        
+    def rebuild_menu(self):
+        """設定言語に基づいてメニューを再構築"""
+        import i18n
+        lang = self.config.get("ui_language", "ja")
+        
         menu = Gtk.Menu()
         
-        item_settings = Gtk.MenuItem(label="Settings")
+        item_settings = Gtk.MenuItem(label=i18n.get_text("tray_settings", lang))
         item_settings.connect("activate", self.on_settings)
         menu.append(item_settings)
         
-        item_quit = Gtk.MenuItem(label="Exit")
+        item_quit = Gtk.MenuItem(label=i18n.get_text("tray_exit", lang))
         item_quit.connect("activate", self.on_exit)
         menu.append(item_quit)
         
@@ -251,6 +267,9 @@ class STTDaemonAppIndicator:
             self.worker_mgr.restart()
             self.overlay_mgr.cleanup()
             self.overlay_mgr.ensure_running()
+            
+            # メニューを再構築（言語変更の反映）
+            GLib.idle_add(self.rebuild_menu)
             
         except Exception as e:
             print(f"Reload failed: {e}")

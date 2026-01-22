@@ -1,137 +1,21 @@
-Gtk-Message: 21:23:01.478: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
+Gtk-Message: 21:28:58.343: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
 Spawning overlay...
 Spawning worker...
 Hotkey Listener Started: <ctrl>+<shift>+<space>
 --- STT Daemon (AppIndicator) ---
-[WORKER] 21:23:01 - [WORKER] Initial Memory Usage: 58.91 MB
-[WORKER] 21:23:01 - [WORKER] Model timeout config: 0
-[WORKER] 21:23:01 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+Hotkey Listener Started: <ctrl>+<shift>+<space>
+--- STT Daemon (AppIndicator) ---
+[WORKER] 21:28:58 - [WORKER] Initial Memory Usage: 58.59 MB
+[WORKER] 21:28:58 - [WORKER] Model timeout config: 0
+[WORKER] 21:28:58 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
 [WORKER] [STATUS] READY
-[WORKER] 21:23:01 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 21:23:21 - [WORKER] Memory Usage [Before Load]: RSS=47.40 MB, Peak=58.91 MB
-[WORKER] 21:23:21 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
-[WORKER] ACK:START
-[WORKER] 21:23:21 - [WORKER] Recording STARTED
-[WORKER] [STATUS] PROC_LOCAL
-[WORKER] 21:23:23 - [WORKER] Recording STOPPED
-[WORKER] 21:23:23 - [WORKER] Waiting for model to load...
-[WORKER] 21:23:26 - [WORKER] Model loaded successfully.
-[WORKER] 21:23:26 - [WORKER] Memory Usage [After Load]: RSS=1035.06 MB, Peak=3258.69 MB
-[WORKER] 21:23:26 - [WORKER] Processing audio with duration 00:01.998
-[WORKER] 21:23:26 - [WORKER] VAD filter removed 00:00.080 of audio
-[WORKER] 21:23:26 - [WORKER] Transcribed (Local, 0.63s): デビーティー
-[WORKER] [STATUS] READY
-[WORKER] 21:23:26 - [WORKER] Memory Usage [Before Unload]: RSS=1335.32 MB, Peak=3258.69 MB
-[WORKER] 21:23:26 - [WORKER] Unloading model contents...
-[WORKER] 21:23:27 - [WORKER] Memory Usage [After Unload]: RSS=1335.25 MB, Peak=3258.69 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 21:23:27 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START
-Spawning worker...
-[WORKER] 21:23:34 - [WORKER] Initial Memory Usage: 60.04 MB
-[WORKER] 21:23:34 - [WORKER] Model timeout config: 0
-[WORKER] 21:23:34 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 21:23:34 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 21:23:34 - [WORKER] Memory Usage [Before Load]: RSS=47.61 MB, Peak=60.04 MB
-[WORKER] 21:23:34 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
-[WORKER] 21:23:34 - [WORKER] Recording STARTED
-Hotkey: STOP
-[WORKER] [STATUS] PROC_LOCAL
-[WORKER] 21:23:37 - [WORKER] Recording STOPPED
-[WORKER] 21:23:37 - [WORKER] Waiting for model to load...
-[WORKER] 21:23:39 - [WORKER] Model loaded successfully.
-[WORKER] 21:23:39 - [WORKER] Memory Usage [After Load]: RSS=1035.34 MB, Peak=3258.95 MB
-[WORKER] 21:23:39 - [WORKER] Processing audio with duration 00:02.902
-[WORKER] 21:23:39 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 21:23:39 - [WORKER] Transcribed (Local, 0.65s): さて今度こそこれで大丈夫かしら
-[WORKER] [STATUS] READY
-[WORKER] 21:23:39 - [WORKER] Memory Usage [Before Unload]: RSS=1336.25 MB, Peak=3258.95 MB
-[WORKER] 21:23:39 - [WORKER] Unloading model contents...
-[WORKER] 21:23:40 - [WORKER] Memory Usage [After Unload]: RSS=1336.19 MB, Peak=3258.95 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 21:23:40 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START
-Spawning worker...
-[WORKER] 21:23:44 - [WORKER] Initial Memory Usage: 60.04 MB
-[WORKER] 21:23:44 - [WORKER] Model timeout config: 0
-[WORKER] 21:23:44 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 21:23:44 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 21:23:44 - [WORKER] Memory Usage [Before Load]: RSS=47.55 MB, Peak=60.04 MB
-[WORKER] 21:23:44 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
-[WORKER] ACK:START
-[WORKER] 21:23:44 - [WORKER] Recording STARTED
-Hotkey: STOP
-[WORKER] [STATUS] PROC_LOCAL
-[WORKER] 21:23:46 - [WORKER] Recording STOPPED
-[WORKER] 21:23:46 - [WORKER] Waiting for model to load...
-[WORKER] 21:23:49 - [WORKER] Model loaded successfully.
-[WORKER] 21:23:49 - [WORKER] Memory Usage [After Load]: RSS=1035.20 MB, Peak=3258.94 MB
-[WORKER] 21:23:49 - [WORKER] Processing audio with duration 00:02.198
-[WORKER] 21:23:49 - [WORKER] VAD filter removed 00:00.304 of audio
-[WORKER] 21:23:49 - [WORKER] Transcribed (Local, 0.60s): 本当に大丈夫かしら
-[WORKER] [STATUS] READY
-[WORKER] 21:23:49 - [WORKER] Memory Usage [Before Unload]: RSS=1335.38 MB, Peak=3258.94 MB
-[WORKER] 21:23:49 - [WORKER] Unloading model contents...
-[WORKER] 21:23:49 - [WORKER] Memory Usage [After Unload]: RSS=1335.31 MB, Peak=3258.94 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 21:23:49 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START
-Spawning worker...
-[WORKER] 21:23:52 - [WORKER] Initial Memory Usage: 60.04 MB
-[WORKER] 21:23:52 - [WORKER] Model timeout config: 0
-[WORKER] 21:23:52 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 21:23:52 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 21:23:52 - [WORKER] Memory Usage [Before Load]: RSS=47.52 MB, Peak=60.04 MB
-[WORKER] 21:23:52 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
-[WORKER] ACK:START
-[WORKER] 21:23:52 - [WORKER] Recording STARTED
-Hotkey: STOP
-[WORKER] [STATUS] PROC_LOCAL
-[WORKER] 21:23:55 - [WORKER] Recording STOPPED
-[WORKER] 21:23:55 - [WORKER] Waiting for model to load...
-[WORKER] 21:23:57 - [WORKER] Model loaded successfully.
-[WORKER] 21:23:57 - [WORKER] Memory Usage [After Load]: RSS=1035.23 MB, Peak=3258.91 MB
-[WORKER] 21:23:57 - [WORKER] Processing audio with duration 00:02.815
-[WORKER] 21:23:57 - [WORKER] VAD filter removed 00:00.304 of audio
-[WORKER] 21:23:57 - [WORKER] Transcribed (Local, 0.66s): 本当に大丈夫なのかしら
-[WORKER] [STATUS] READY
-[WORKER] 21:23:58 - [WORKER] Memory Usage [Before Unload]: RSS=1336.80 MB, Peak=3258.91 MB
-[WORKER] 21:23:58 - [WORKER] Unloading model contents...
-[WORKER] 21:23:58 - [WORKER] Memory Usage [After Unload]: RSS=1336.74 MB, Peak=3258.91 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 21:23:58 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START
-Spawning worker...
-[WORKER] 21:24:30 - [WORKER] Initial Memory Usage: 60.04 MB
-[WORKER] 21:24:30 - [WORKER] Model timeout config: 0
-[WORKER] 21:24:30 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 21:24:30 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 21:24:30 - [WORKER] Memory Usage [Before Load]: RSS=47.50 MB, Peak=60.04 MB
-[WORKER] 21:24:30 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
-[WORKER] ACK:START
-[WORKER] 21:24:30 - [WORKER] Recording STARTED
-Hotkey: STOP
-[WORKER] [STATUS] PROC_LOCAL
-[WORKER] 21:24:31 - [WORKER] Recording STOPPED
-[WORKER] 21:24:31 - [WORKER] Waiting for model to load...
-[WORKER] 21:24:34 - [WORKER] Model loaded successfully.
-[WORKER] 21:24:34 - [WORKER] Memory Usage [After Load]: RSS=1035.13 MB, Peak=3259.22 MB
-[WORKER] 21:24:34 - [WORKER] Processing audio with duration 00:00.660
-[WORKER] 21:24:34 - [WORKER] VAD filter removed 00:00.660 of audio
-[WORKER] 21:24:34 - [WORKER] Transcribed (Local, 0.03s):
-[WORKER] [STATUS] READY
-[WORKER] 21:24:34 - [WORKER] Memory Usage [Before Unload]: RSS=1059.07 MB, Peak=3259.22 MB
-[WORKER] 21:24:34 - [WORKER] Unloading model contents...
-[WORKER] 21:24:35 - [WORKER] Memory Usage [After Unload]: RSS=1059.14 MB, Peak=3259.22 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 21:24:35 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+[WORKER] 21:28:58 - [WORKER] Interactive Loop Started
+Opening GUI...
+/home/heppo/ai_tools/speech_to_text/gui.py:235: DeprecationWarning: app() is deprecated since version 0.70.0. Use run() instead.
+  ft.app(target=main)
+Gtk-Message: 21:29:16.230: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
+package:media_kit_libs_linux registered.
+/home/heppo/ai_tools/speech_to_text/gui.py:162: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
+  btn_save = ft.ElevatedButton(t("btn_save"), on_click=save_settings, icon="save")
+/home/heppo/ai_tools/speech_to_text/gui.py:200: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
+  btn_convert = ft.ElevatedButton(t("btn_convert"), on_click=run_converter, icon="download")
