@@ -1,21 +1,42 @@
-Gtk-Message: 21:28:58.343: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
+Gtk-Message: 21:42:55.645: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
 Spawning overlay...
 Spawning worker...
 Hotkey Listener Started: <ctrl>+<shift>+<space>
 --- STT Daemon (AppIndicator) ---
 Hotkey Listener Started: <ctrl>+<shift>+<space>
 --- STT Daemon (AppIndicator) ---
-[WORKER] 21:28:58 - [WORKER] Initial Memory Usage: 58.59 MB
-[WORKER] 21:28:58 - [WORKER] Model timeout config: 0
-[WORKER] 21:28:58 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] 21:42:55 - [WORKER] Initial Memory Usage: 59.15 MB
+[WORKER] 21:42:55 - [WORKER] Model timeout config: 0
+[WORKER] 21:42:55 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
 [WORKER] [STATUS] READY
-[WORKER] 21:28:58 - [WORKER] Interactive Loop Started
-Opening GUI...
-/home/heppo/ai_tools/speech_to_text/gui.py:235: DeprecationWarning: app() is deprecated since version 0.70.0. Use run() instead.
-  ft.app(target=main)
-Gtk-Message: 21:29:16.230: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
-package:media_kit_libs_linux registered.
-/home/heppo/ai_tools/speech_to_text/gui.py:162: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
-  btn_save = ft.ElevatedButton(t("btn_save"), on_click=save_settings, icon="save")
-/home/heppo/ai_tools/speech_to_text/gui.py:200: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
-  btn_convert = ft.ElevatedButton(t("btn_convert"), on_click=run_converter, icon="download")
+[WORKER] 21:42:55 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] 21:43:04 - [WORKER] Memory Usage [Before Load]: RSS=47.53 MB, Peak=59.15 MB
+[WORKER] 21:43:04 - [WORKER] Loading model: kotoba-whisper-v2.2-int8
+[WORKER] ACK:START
+[WORKER] 21:43:04 - [WORKER] Recording STARTED
+[WORKER] 21:43:06 - [WORKER] Recording STOPPED
+[WORKER] 21:43:06 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] [STATUS] REC
+[WORKER] 21:43:06 - [WORKER] Waiting for model to load...
+[WORKER] ACK:START
+[WORKER] 21:43:06 - [WORKER] Recording STARTED
+[WORKER] 21:43:08 - [WORKER] Recording STOPPED
+[WORKER] 21:43:08 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 21:43:09 - [WORKER] Model loaded successfully.
+[WORKER] 21:43:09 - [WORKER] Memory Usage [After Load]: RSS=1035.18 MB, Peak=3258.77 MB
+[WORKER] 21:43:09 - [WORKER] Processing audio with duration 00:02.042
+[WORKER] 21:43:09 - [WORKER] VAD filter removed 00:02.042 of audio
+[WORKER] 21:43:09 - [WORKER] Transcribed (Local, 0.04s):
+[WORKER] 21:43:09 - [WORKER] Processing audio with duration 00:02.059
+[WORKER] 21:43:09 - [WORKER] VAD filter removed 00:02.059 of audio
+[WORKER] 21:43:09 - [WORKER] Transcribed (Local, 0.01s):
+[WORKER] 21:43:09 - [WORKER] Memory Usage [Before Unload]: RSS=1060.32 MB, Peak=3258.77 MB
+[WORKER] 21:43:09 - [WORKER] Unloading model contents...
+[WORKER] 21:43:09 - [WORKER] Memory Usage [After Unload]: RSS=1060.38 MB, Peak=3258.77 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 21:43:09 - [WORKER] Exiting worker process to ensure complete memory cleanup.

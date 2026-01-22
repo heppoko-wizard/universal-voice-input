@@ -200,81 +200,96 @@ def main(page: ft.Page):
     btn_convert = ft.ElevatedButton(t("btn_convert"), on_click=run_converter, icon="download")
     txt_console = ft.Text(value="", font_family="Consolas", size=12)
 
-    # --- Layout Sections ---
-    
-    def SectionCard(title, icon, content):
-        return ft.Card(
-            content=ft.Container(
-                content=ft.Column([
-                    ft.ListTile(
-                        leading=ft.Icon(icon, color=ft.Colors.BLUE_400),
-                        title=ft.Text(title, size=18, weight="bold"),
-                    ),
-                    ft.Container(
-                        padding=ft.padding.only(left=20, right=20, bottom=20),
-                        content=content
-                    )
-                ], spacing=10),
-                padding=10
-            ),
-            elevation=2
+    # --- Grouping & Layout Logic ---
+
+    # 1. General Settings Group
+    card_general = ft.Card(
+        content=ft.Container(
+            padding=15,
+            content=ft.Column([
+                ft.Text(t("api_settings"), size=18, weight="bold"),
+                dd_lang
+            ])
         )
-
-    system_section = SectionCard(
-        t("sec_system"), "settings",
-        ft.Column([
-            dd_lang,
-            txt_hotkey,
-            dd_device,
-        ])
     )
 
-    engine_section = SectionCard(
-        t("sec_engine"), "psychology",
-        ft.Column([
-            cb_local,
-            api_groq,
-            txt_speed,
-        ])
+    # 2. Input Settings Group
+    card_input = ft.Card(
+        content=ft.Container(
+            padding=15,
+            content=ft.Column([
+                ft.Text(t("input_settings"), size=18, weight="bold"),
+                dd_device,
+                txt_hotkey,
+                txt_speed
+            ])
+        )
     )
 
-    optimization_section = SectionCard(
-        t("sec_optimization"), "memory",
-        ft.Column([
-            txt_timeout_label,
-            cb_infinite,
-            slider_timeout,
-            ft.Divider(),
-            txt_model_path,
-            btn_convert,
-            ft.Container(
-                content=txt_console,
-                bgcolor=ft.Colors.BLACK54,
-                padding=10,
-                border_radius=5,
-            ),
-        ])
+    # 3. Inference Settings Group
+    
+    # Groq API Field (Only visible when Local is OFF)
+    container_groq = ft.Column([
+        ft.Container(height=5),
+        api_groq
+    ], visible=not cb_local.value)
+
+    # Local Model Settings Content (Only visible when Local is ON)
+    container_local_content = ft.Column([
+        ft.Text(t("local_model_settings"), size=18, weight="bold"),
+        ft.Divider(),
+        txt_timeout_label,
+        cb_infinite,
+        slider_timeout,
+        ft.Container(height=10),
+        txt_model_path,
+        btn_convert,
+        ft.Text(t("convert_help"), size=12, color="grey"),
+        ft.Container(
+            content=txt_console,
+            bgcolor=ft.Colors.BLACK54,
+            padding=10,
+            border_radius=5,
+        )
+    ])
+
+    card_local_settings = ft.Card(
+        content=ft.Container(
+            padding=15,
+            content=container_local_content
+        ),
+        visible=cb_local.value
+    )
+
+    def on_mode_change(e):
+        container_groq.visible = not cb_local.value
+        card_local_settings.visible = cb_local.value
+        page.update()
+
+    cb_local.on_change = on_mode_change
+
+    card_inference = ft.Card(
+        content=ft.Container(
+            padding=15,
+            content=ft.Column([
+                ft.Text(t("inference_settings"), size=18, weight="bold"),
+                cb_local,
+                container_groq
+            ])
+        )
     )
 
     # Main Layout
     page.add(
-        ft.Container(
-            content=ft.Column([
-                ft.Row([
-                    ft.Icon("record_voice_over", size=32, color=ft.Colors.BLUE_ACCENT),
-                    ft.Text(t("title"), size=24, weight="bold"),
-                ], alignment="center"),
-                ft.Divider(height=20, color="transparent"),
-                system_section,
-                engine_section,
-                optimization_section,
-                ft.Divider(height=20, color="transparent"),
-                ft.Row([btn_save], alignment="center"),
-                ft.Row([status_text], alignment="center"),
-                ft.Container(height=20) # Bottom padding
-            ], spacing=15),
-            padding=20
-        )
+        ft.Text(t("title"), size=24, weight="bold"),
+        card_general,
+        card_input,
+        card_inference,
+        card_local_settings,
+        ft.Container(height=10),
+        ft.Row([btn_save], alignment="center"),
+        ft.Row([status_text], alignment="center"),
+        ft.Container(height=20),
     )
 
 if __name__ == "__main__":

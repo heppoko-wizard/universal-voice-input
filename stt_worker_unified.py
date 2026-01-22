@@ -73,7 +73,8 @@ class UnifiedSTTWorker:
         self.stop_recording_event = threading.Event()
         self.recording_thread = None
         
-        self.last_activity = time.time()
+        # 処理キューの追加 (録音と処理の切り離し)
+        self.transcription_queue = queue.Queue()
         
         self.last_activity = time.time()
         
@@ -96,14 +97,17 @@ class UnifiedSTTWorker:
 
         # タイムアウト監視スレッドの開始
         threading.Thread(target=self._monitor_timeout, daemon=True).start()
+        
+        # バックグラウンド処理スレッドの開始
+        threading.Thread(target=self._transcription_worker, daemon=True).start()
 
     def _monitor_timeout(self):
         """モデル保持時間が指定されている場合、アイドル時間を監視してアンロード"""
         while True:
             time.sleep(1)
             if self.model and self.model_timeout > 0:
-                # 録音中などはアンロードしない
-                if not self.recording and not self.model_loading:
+                # 録音中や、処理待ちがある間はアンロードしない
+                if not self.recording and not self.model_loading and self.transcription_queue.empty():
                     elapsed = time.time() - self.last_activity
                     if elapsed > self.model_timeout:
                         logger.info(f"Timeout reached ({elapsed:.1f}s > {self.model_timeout}s). Unloading model...")
@@ -222,25 +226,19 @@ class UnifiedSTTWorker:
         if not self.recording:
             return
 
-        # 毎回最新の設定を読み込む（start_recordingで読み込んだものを使うが念のため）
-        self.config = config_manager.load_config()
-
-        # モード判定: ローカルかオンラインか
-        use_local = self.config.get("use_local_model", True)
-        
-        # STATUS: PROCESSING (モード別)
-        if use_local:
-            print("[STATUS] PROC_LOCAL")
-        else:
-            print("[STATUS] PROC_ONLINE")
-        sys.stdout.flush()
-
+        # 停止シグナル
         self.stop_recording_event.set()
         if self.recording_thread:
             self.recording_thread.join(timeout=2.0)
         self.recording = False
         logger.info("Recording STOPPED")
-        
+
+        # 設定読み込み
+        self.config = config_manager.load_config()
+        use_local = self.config.get("use_local_model", True)
+        speed_factor = self.config.get("speed_factor", 1.0)
+
+        # データを回収
         audio_data = []
         while not self.audio_queue.empty():
             audio_data.append(self.audio_queue.get())
@@ -251,41 +249,73 @@ class UnifiedSTTWorker:
             sys.stdout.flush()
             return
 
+        # 前処理 (データをキューへ)
         audio_np = np.concatenate(audio_data, axis=0).flatten().astype(np.float32)
-        
-        speed_factor = self.config.get("speed_factor", 1.0)
         if speed_factor > 1.0:
             indices = np.arange(0, len(audio_np), speed_factor)
             audio_np = audio_np[indices.astype(int)]
 
-        # モード判定: ローカルかオンラインか
-        use_local = self.config.get("use_local_model", True)
-        
+        # キューにタスクを投入
+        task = {
+            "audio": audio_np,
+            "use_local": use_local,
+            "config": self.config
+        }
+        self.transcription_queue.put(task)
+        logger.info("Enqueued transcription task.")
+
+        # 即座にREADYを返す (次の録音を可能にする)
+        print("[STATUS] READY")
+        sys.stdout.flush()
+
+    def _transcription_worker(self):
+        """バックグラウンドでキューを監視して文字起こしを行う"""
+        while True:
+            try:
+                task = self.transcription_queue.get()
+                if task is None: break # 終了用
+                
+                audio_np = task["audio"]
+                use_local = task["use_local"]
+                config = task["config"]
+                
+                self.process_task(audio_np, use_local, config)
+                self.transcription_queue.task_done()
+                
+                # アクティビティ更新 (モデルアンロードの起点を処理終了時にする)
+                self.last_activity = time.time()
+                
+                # アンロード判定 (0秒設定、またはタイムアウトチェックのためにキューが空になったことをトリガーにする)
+                self.model_timeout = config.get("local_model_timeout", -1)
+                if use_local and self.model_timeout == 0 and not self.recording and self.transcription_queue.empty():
+                    self.unload_model()
+                
+            except Exception as e:
+                logger.error(f"Worker thread error: {e}")
+                time.sleep(1)
+
+    def process_task(self, audio_np, use_local, config):
+        """実際の文字起こし処理"""
         if use_local:
             # ローカルモデルで処理
             if not self.model_ready_event.is_set():
                 logger.info("Waiting for model to load...")
                 if not self.model_ready_event.wait(timeout=30):
                     logger.error("Model load timed out.")
-                    print("[STATUS] READY")
-                    sys.stdout.flush()
                     return
 
             if self.model:
                 start_time = time.time()
-                # generatorを確実に消費
                 segments, _ = self.model.transcribe(audio_np, beam_size=5, language="ja", vad_filter=True)
                 text_list = []
                 for s in segments:
                     text_list.append(s.text)
                 text = "".join(text_list).strip()
                 
-                # segmentsオブジェクトへの参照を明示的に消去
                 del segments
                 del text_list
                 
                 logger.info(f"Transcribed (Local, {time.time() - start_time:.2f}s): {text}")
-                
                 if text:
                     platform_utils.type_text(text)
             else:
@@ -298,34 +328,29 @@ class UnifiedSTTWorker:
                 import wave
                 from groq import Groq
                 
-                # 音声データをWAVファイルとしてメモリ上に作成
                 wav_buffer = io.BytesIO()
                 with wave.open(wav_buffer, 'wb') as wav_file:
                     wav_file.setnchannels(CHANNELS)
-                    wav_file.setsampwidth(2)  # 16-bit
+                    wav_file.setsampwidth(2)
                     wav_file.setframerate(SAMPLE_RATE)
-                    # float32 -> int16に変換
                     audio_int16 = (audio_np * 32767).astype(np.int16)
                     wav_file.writeframes(audio_int16.tobytes())
                 
                 wav_buffer.seek(0)
-                wav_buffer.name = "audio.wav"  # Groq APIが要求するファイル名属性
+                wav_buffer.name = "audio.wav"
                 
-                # Groq APIで文字起こし
-                api_key = self.config.get("api_keys", {}).get("groq", "")
+                api_key = config.get("api_keys", {}).get("groq", "")
                 if not api_key:
-                    logger.error("Groq API key not found in config")
-                    print("[STATUS] READY")
-                    sys.stdout.flush()
+                    logger.error("Groq API key not found")
                     return
                 
                 client = Groq(api_key=api_key)
-                model = self.config.get("api_models", {}).get("groq", "whisper-large-v3-turbo")
+                model_id = config.get("api_models", {}).get("groq", "whisper-large-v3-turbo")
                 
                 start_time = time.time()
                 transcription = client.audio.transcriptions.create(
                     file=wav_buffer,
-                    model=model,
+                    model=model_id,
                     language="ja"
                 )
                 text = transcription.text.strip()
@@ -336,24 +361,13 @@ class UnifiedSTTWorker:
                     
             except Exception as e:
                 logger.error(f"Online API error: {e}")
-            
-        # STATUS: READY
-        print("[STATUS] READY")
-        sys.stdout.flush()
-
-        # ここでメモリ解放判定
-        self.model_timeout = self.config.get("local_model_timeout", -1)
-        self.last_activity = time.time() # アクティビティ更新
-        
-        # 0なら即時解放
-        if use_local and self.model_timeout == 0:
-            self.unload_model()
 
     def run(self):
         logger.info("Interactive Loop Started")
         
         while True:
-            if not self.recording and (time.time() - self.last_activity > self.timeout):
+            # 録音中や、処理待ちのタスクがある間は終了しない
+            if not self.recording and self.transcription_queue.empty() and (time.time() - self.last_activity > self.timeout):
                 logger.info(f"Timeout ({self.timeout}s). Exiting.")
                 break
 
