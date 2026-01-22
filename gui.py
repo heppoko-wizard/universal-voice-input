@@ -191,8 +191,10 @@ def main(page: ft.Page):
                 txt_console.value = t("console_start")
                 page.update()
                 
+                # ドロップダウンで選択されているモデルIDを引数として渡す
+                selected_model = dd_model.value
                 process = subprocess.Popen(
-                    ["python", "convert_model.py"],
+                    ["python", "convert_model.py", selected_model],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     text=True,

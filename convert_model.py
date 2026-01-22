@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
 モデルのダウンロードと最適化を行うスクリプト。
-config.json で指定されたモデル ID を取得し、models/ フォルダ以下に準備します。
+引数でモデルIDを受け取るか、config.json から取得します。
 """
 import os
+import sys
 import shutil
 import json
 import logging
@@ -19,15 +20,22 @@ MODELS_DIR = "models"
 def main():
     logger.info("--- Model Setup / Update ---")
     
-    # 1. Load Config
-    if not os.path.exists(CONFIG_FILE):
-        logger.error(f"{CONFIG_FILE} not found. Please run the GUI first.")
-        return
+    # 1. コマンドライン引数からモデルIDを取得（GUIから渡される）
+    if len(sys.argv) > 1:
+        model_id = sys.argv[1]
+        logger.info(f"Model ID from argument: {model_id}")
+    else:
+        # フォールバック: config.jsonから読み取る
+        if not os.path.exists(CONFIG_FILE):
+            logger.error(f"{CONFIG_FILE} not found. Please run the GUI first.")
+            return
 
-    with open(CONFIG_FILE, "r") as f:
-        config = json.load(f)
+        with open(CONFIG_FILE, "r") as f:
+            config = json.load(f)
+        
+        model_id = config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
+        logger.info(f"Model ID from config: {model_id}")
     
-    model_id = config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
     logger.info(f"Target Model: {model_id}")
 
     # 2. Local folder name (safe version of model_id)
