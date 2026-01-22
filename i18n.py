@@ -2,6 +2,9 @@
 TRANSLATIONS = {
     "ja": {
         "title": "STT 設定エディタ",
+        "sec_system": "システム設定",
+        "sec_engine": "認識エンジン",
+        "sec_optimization": "リソース最適化",
         "api_settings": "基本設定",
         "groq_key": "Groq APIキー",
         "use_local": "ローカルモデルを使用する",
@@ -32,6 +35,9 @@ TRANSLATIONS = {
     },
     "en": {
         "title": "STT Config Editor",
+        "sec_system": "System Settings",
+        "sec_engine": "Transcription Engine",
+        "sec_optimization": "Resource Optimization",
         "api_settings": "General Settings",
         "groq_key": "Groq API Key",
         "use_local": "Use Local Model",
@@ -62,6 +68,9 @@ TRANSLATIONS = {
     },
     "zh": {
         "title": "STT 配置编辑器",
+        "sec_system": "系统设置",
+        "sec_engine": "识别引擎",
+        "sec_optimization": "资源优化",
         "api_settings": "常规设置",
         "groq_key": "Groq API 密钥",
         "use_local": "使用本地模型",

@@ -200,35 +200,81 @@ def main(page: ft.Page):
     btn_convert = ft.ElevatedButton(t("btn_convert"), on_click=run_converter, icon="download")
     txt_console = ft.Text(value="", font_family="Consolas", size=12)
 
-    # Layout
+    # --- Layout Sections ---
+    
+    def SectionCard(title, icon, content):
+        return ft.Card(
+            content=ft.Container(
+                content=ft.Column([
+                    ft.ListTile(
+                        leading=ft.Icon(icon, color=ft.Colors.BLUE_400),
+                        title=ft.Text(title, size=18, weight="bold"),
+                    ),
+                    ft.Container(
+                        padding=ft.padding.only(left=20, right=20, bottom=20),
+                        content=content
+                    )
+                ], spacing=10),
+                padding=10
+            ),
+            elevation=2
+        )
+
+    system_section = SectionCard(
+        t("sec_system"), "settings",
+        ft.Column([
+            dd_lang,
+            txt_hotkey,
+            dd_device,
+        ])
+    )
+
+    engine_section = SectionCard(
+        t("sec_engine"), "psychology",
+        ft.Column([
+            cb_local,
+            api_groq,
+            txt_speed,
+        ])
+    )
+
+    optimization_section = SectionCard(
+        t("sec_optimization"), "memory",
+        ft.Column([
+            txt_timeout_label,
+            cb_infinite,
+            slider_timeout,
+            ft.Divider(),
+            txt_model_path,
+            btn_convert,
+            ft.Container(
+                content=txt_console,
+                bgcolor=ft.Colors.BLACK54,
+                padding=10,
+                border_radius=5,
+            ),
+        ])
+    )
+
+    # Main Layout
     page.add(
-        ft.Text(t("title"), size=24, weight="bold"),
-        ft.Divider(),
-        ft.Text(t("api_settings"), size=18, weight="bold"),
-        dd_lang,
-        api_groq,
-        dd_device,
-        txt_hotkey,
-        txt_speed,
-        ft.Divider(),
-        ft.Text(t("local_model_settings"), size=18, weight="bold"),
-        cb_local,
-        ft.Container(height=10),
-        txt_timeout_label,
-        cb_infinite,
-        slider_timeout,
-        ft.Container(height=10),
-        txt_model_path,
-        btn_convert,
         ft.Container(
-            content=txt_console,
-            bgcolor=ft.Colors.BLACK54,
-            padding=10,
-            border_radius=5,
-        ),
-        ft.Divider(),
-        ft.Row([btn_save], alignment="center"),
-        ft.Row([status_text], alignment="center"),
+            content=ft.Column([
+                ft.Row([
+                    ft.Icon("record_voice_over", size=32, color=ft.Colors.BLUE_ACCENT),
+                    ft.Text(t("title"), size=24, weight="bold"),
+                ], alignment="center"),
+                ft.Divider(height=20, color="transparent"),
+                system_section,
+                engine_section,
+                optimization_section,
+                ft.Divider(height=20, color="transparent"),
+                ft.Row([btn_save], alignment="center"),
+                ft.Row([status_text], alignment="center"),
+                ft.Container(height=20) # Bottom padding
+            ], spacing=15),
+            padding=20
+        )
     )
 
 if __name__ == "__main__":
