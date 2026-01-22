@@ -1,12 +1,196 @@
-Gtk-Message: 22:21:24.401: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
+Gtk-Message: 22:25:28.817: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
 Hotkey Listener Started: <ctrl>+<shift>+<space> (Mode: toggle)
 Spawning overlay...
 Spawning worker...
 --- STT Daemon (AppIndicator) ---
 Hotkey Listener Started: <ctrl>+<shift>+<space> (Mode: toggle)
 --- STT Daemon (AppIndicator) ---
-[WORKER] 22:21:24 - [WORKER] Initial Memory Usage: 59.89 MB
-[WORKER] 22:21:24 - [WORKER] Model timeout config: 60
-[WORKER] 22:21:24 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] 22:25:29 - [WORKER] Initial Memory Usage: 59.50 MB
+[WORKER] 22:25:29 - [WORKER] Model timeout config: 0
+[WORKER] 22:25:29 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
 [WORKER] [STATUS] READY
-[WORKER] 22:21:24 - [WORKER] Interactive Loop Started
+[WORKER] 22:25:29 - [WORKER] Interactive Loop Started
+Hotkey: START (Toggle)
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:25:31 - [WORKER] Memory Usage [Before Load]: RSS=47.54 MB, Peak=59.50 MB
+[WORKER] 22:25:31 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] 22:25:31 - [WORKER] Recording STARTED
+Hotkey: STOP (Toggle)
+[WORKER] 22:25:34 - [WORKER] Recording STOPPED
+[WORKER] 22:25:34 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 22:25:34 - [WORKER] Waiting for model to load...
+[WORKER] 22:25:35 - [WORKER] Model loaded successfully.
+[WORKER] 22:25:35 - [WORKER] Memory Usage [After Load]: RSS=1035.64 MB, Peak=3258.98 MB
+[WORKER] 22:25:35 - [WORKER] Processing audio with duration 00:03.623
+[WORKER] 22:25:35 - [WORKER] VAD filter removed 00:00.624 of audio
+[WORKER] 22:25:36 - [WORKER] Transcribed (Local, 0.64s): 私は大好き
+[WORKER] 22:25:36 - [WORKER] Memory Usage [Before Unload]: RSS=1336.80 MB, Peak=3258.98 MB
+[WORKER] 22:25:36 - [WORKER] Unloading model contents...
+[WORKER] 22:25:36 - [WORKER] Memory Usage [After Unload]: RSS=1336.73 MB, Peak=3258.98 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:25:36 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:26:18 - [WORKER] Initial Memory Usage: 60.64 MB
+[WORKER] 22:26:18 - [WORKER] Model timeout config: 0
+[WORKER] 22:26:18 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:18 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:26:18 - [WORKER] Memory Usage [Before Load]: RSS=47.71 MB, Peak=60.64 MB
+[WORKER] 22:26:18 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] 22:26:18 - [WORKER] Recording STARTED
+Hotkey: STOP (Toggle)
+[WORKER] 22:26:20 - [WORKER] Recording STOPPED
+[WORKER] 22:26:20 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 22:26:20 - [WORKER] Waiting for model to load...
+Hotkey: START (Toggle)
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:26:23 - [WORKER] Recording STARTED
+[WORKER] 22:26:23 - [WORKER] Model loaded successfully.
+[WORKER] 22:26:23 - [WORKER] Memory Usage [After Load]: RSS=1035.78 MB, Peak=3259.48 MB
+[WORKER] 22:26:23 - [WORKER] Processing audio with duration 00:02.085
+[WORKER] 22:26:23 - [WORKER] VAD filter removed 00:00.240 of audio
+[WORKER] 22:26:24 - [WORKER] Transcribed (Local, 0.58s): パー、でてー
+Hotkey: STOP (Toggle)
+[WORKER] 22:26:25 - [WORKER] Recording STOPPED
+[WORKER] 22:26:25 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 22:26:25 - [WORKER] Processing audio with duration 00:02.267
+[WORKER] 22:26:25 - [WORKER] VAD filter removed 00:00.176 of audio
+[WORKER] 22:26:26 - [WORKER] Transcribed (Local, 0.38s): はいはい今行きますよ
+[WORKER] 22:26:26 - [WORKER] Memory Usage [Before Unload]: RSS=1337.79 MB, Peak=3259.48 MB
+[WORKER] 22:26:26 - [WORKER] Unloading model contents...
+[WORKER] 22:26:26 - [WORKER] Memory Usage [After Unload]: RSS=1337.70 MB, Peak=3259.48 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:26:26 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:26:31 - [WORKER] Initial Memory Usage: 60.77 MB
+[WORKER] 22:26:31 - [WORKER] Model timeout config: 0
+[WORKER] 22:26:31 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:31 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:26:31 - [WORKER] Memory Usage [Before Load]: RSS=47.59 MB, Peak=60.77 MB
+[WORKER] 22:26:31 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] 22:26:31 - [WORKER] Recording STARTED
+Hotkey: STOP (Toggle)
+[WORKER] 22:26:33 - [WORKER] Recording STOPPED
+[WORKER] 22:26:33 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:33 - [WORKER] Waiting for model to load...
+[WORKER] ACK:STOP
+[WORKER] 22:26:36 - [WORKER] Model loaded successfully.
+[WORKER] 22:26:36 - [WORKER] Memory Usage [After Load]: RSS=1035.47 MB, Peak=3259.46 MB
+[WORKER] 22:26:36 - [WORKER] Processing audio with duration 00:01.937
+[WORKER] 22:26:36 - [WORKER] VAD filter removed 00:00.016 of audio
+[WORKER] 22:26:36 - [WORKER] Transcribed (Local, 0.60s): あらきれいなこと
+[WORKER] 22:26:36 - [WORKER] Memory Usage [Before Unload]: RSS=1336.24 MB, Peak=3259.46 MB
+[WORKER] 22:26:36 - [WORKER] Unloading model contents...
+[WORKER] 22:26:37 - [WORKER] Memory Usage [After Unload]: RSS=1336.18 MB, Peak=3259.46 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:26:37 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:26:39 - [WORKER] Initial Memory Usage: 60.77 MB
+[WORKER] 22:26:39 - [WORKER] Model timeout config: 0
+[WORKER] 22:26:39 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:39 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:26:39 - [WORKER] Memory Usage [Before Load]: RSS=47.67 MB, Peak=60.77 MB
+[WORKER] 22:26:39 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] 22:26:39 - [WORKER] Recording STARTED
+Hotkey: STOP (Toggle)
+[WORKER] 22:26:41 - [WORKER] Recording STOPPED
+[WORKER] 22:26:41 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 22:26:41 - [WORKER] Waiting for model to load...
+[WORKER] 22:26:44 - [WORKER] Model loaded successfully.
+[WORKER] 22:26:44 - [WORKER] Memory Usage [After Load]: RSS=1035.60 MB, Peak=3258.94 MB
+[WORKER] 22:26:44 - [WORKER] Processing audio with duration 00:01.859
+[WORKER] 22:26:44 - [WORKER] VAD filter removed 00:00.144 of audio
+[WORKER] 22:26:44 - [WORKER] Transcribed (Local, 0.62s): なんて美しいの?
+[WORKER] 22:26:44 - [WORKER] Memory Usage [Before Unload]: RSS=1336.02 MB, Peak=3258.94 MB
+[WORKER] 22:26:44 - [WORKER] Unloading model contents...
+[WORKER] 22:26:45 - [WORKER] Memory Usage [After Unload]: RSS=1335.96 MB, Peak=3258.94 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:26:45 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:26:48 - [WORKER] Initial Memory Usage: 60.77 MB
+[WORKER] 22:26:48 - [WORKER] Model timeout config: 0
+[WORKER] 22:26:48 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:48 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] 22:26:48 - [WORKER] Memory Usage [Before Load]: RSS=47.73 MB, Peak=60.77 MB
+[WORKER] 22:26:48 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] ACK:START
+[WORKER] 22:26:48 - [WORKER] Recording STARTED
+[WORKER] 22:26:53 - [WORKER] Model loaded successfully.
+[WORKER] 22:26:53 - [WORKER] Memory Usage [After Load]: RSS=1035.90 MB, Peak=3259.34 MB
+Hotkey: STOP (Toggle)
+[WORKER] 22:26:55 - [WORKER] Recording STOPPED
+[WORKER] 22:26:55 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] 22:26:55 - [WORKER] Processing audio with duration 00:06.368
+[WORKER] ACK:STOP
+[WORKER] 22:26:55 - [WORKER] VAD filter removed 00:00.272 of audio
+[WORKER] 22:26:55 - [WORKER] Transcribed (Local, 0.71s): 絶対にキャサリンに似合うと思ったんだはい着付けは後で教えるね
+[WORKER] 22:26:56 - [WORKER] Memory Usage [Before Unload]: RSS=1342.48 MB, Peak=3259.34 MB
+[WORKER] 22:26:56 - [WORKER] Unloading model contents...
+[WORKER] 22:26:56 - [WORKER] Memory Usage [After Unload]: RSS=1342.41 MB, Peak=3259.34 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:26:56 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:28:31 - [WORKER] Initial Memory Usage: 60.77 MB
+[WORKER] 22:28:31 - [WORKER] Model timeout config: 0
+[WORKER] 22:28:31 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:28:31 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] ACK:START
+[WORKER] 22:28:31 - [WORKER] Memory Usage [Before Load]: RSS=47.73 MB, Peak=60.77 MB
+[WORKER] 22:28:31 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] 22:28:31 - [WORKER] Recording STARTED
+[WORKER] 22:28:35 - [WORKER] Model loaded successfully.
+[WORKER] 22:28:35 - [WORKER] Memory Usage [After Load]: RSS=1035.87 MB, Peak=3259.32 MB
+Hotkey: STOP (Toggle)
+[WORKER] 22:28:39 - [WORKER] Recording STOPPED
+[WORKER] 22:28:39 - [WORKER] Enqueued transcription task.
+[WORKER] [STATUS] READY
+[WORKER] ACK:STOP
+[WORKER] 22:28:39 - [WORKER] Processing audio with duration 00:08.331
+[WORKER] 22:28:39 - [WORKER] VAD filter removed 00:00.464 of audio
+[WORKER] 22:28:40 - [WORKER] Transcribed (Local, 0.73s): めんどくせえななんか本当になんていうかすっげえめんどくせえびっくりするらいめんどくさいんだけど
+[WORKER] 22:28:40 - [WORKER] Memory Usage [Before Unload]: RSS=1343.86 MB, Peak=3259.32 MB
+[WORKER] 22:28:40 - [WORKER] Unloading model contents...
+[WORKER] 22:28:40 - [WORKER] Memory Usage [After Unload]: RSS=1343.80 MB, Peak=3259.32 MB
+[WORKER] [STATUS] UNLOADED
+[WORKER] 22:28:40 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+Hotkey: START (Toggle)
+Spawning worker...
+[WORKER] 22:28:58 - [WORKER] Initial Memory Usage: 60.77 MB
+[WORKER] 22:28:58 - [WORKER] Model timeout config: 0
+[WORKER] 22:28:58 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:28:58 - [WORKER] Interactive Loop Started
+[WORKER] [STATUS] REC
+[WORKER] 22:28:58 - [WORKER] Memory Usage [Before Load]: RSS=47.80 MB, Peak=60.77 MB
+[WORKER] 22:28:58 - [WORKER] Loading model: kotoba-whisper-v2.2-faster
+[WORKER] ACK:START
+[WORKER] 22:28:58 - [WORKER] Recording STARTED
