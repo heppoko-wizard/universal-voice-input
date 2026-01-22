@@ -308,6 +308,16 @@ class UnifiedSTTWorker:
         lang = config.get("language", "ja")
         add_punctuation = config.get("add_punctuation", True)
         
+        # モデル変更の検知 (ホットリロード)
+        new_model_id = config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
+        if use_local and new_model_id != self.model_id:
+            logger.info(f"Model ID change detected: {self.model_id} -> {new_model_id}")
+            logger.info("Restarting worker to apply new model...")
+            # モデルを解放して終了
+            if self.model:
+                self.unload_model()
+            sys.exit(0) # デーモンが再起動してくれる
+
         # 句読点を誘発するためのプロンプト
         initial_prompt = ""
         if add_punctuation:

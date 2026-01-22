@@ -1,0 +1,12 @@
+Gtk-Message: 22:21:24.401: Failed to load module "appmenu-gtk-module": 'gtk_module_display_init': /usr/lib/x86_64-linux-gnu/gtk-3.0/modules/libcolorreload-gtk-module.so: undefined symbol: gtk_module_display_init
+Hotkey Listener Started: <ctrl>+<shift>+<space> (Mode: toggle)
+Spawning overlay...
+Spawning worker...
+--- STT Daemon (AppIndicator) ---
+Hotkey Listener Started: <ctrl>+<shift>+<space> (Mode: toggle)
+--- STT Daemon (AppIndicator) ---
+[WORKER] 22:21:24 - [WORKER] Initial Memory Usage: 59.89 MB
+[WORKER] 22:21:24 - [WORKER] Model timeout config: 60
+[WORKER] 22:21:24 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 22:21:24 - [WORKER] Interactive Loop Started

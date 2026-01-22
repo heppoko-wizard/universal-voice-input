@@ -168,7 +168,7 @@ def main(page: ft.Page):
             
             config_manager.save_config(config)
             
-            status_text.value = t("status_saved")
+            status_text.value = "設定を保存しました。次の録音から新しい設定が適用されます。"
             status_text.color = "blue"
             page.update()
             
