@@ -1,55 +1,57 @@
 #!/usr/bin/env python3
 """
-既存のローカル CTranslate2 モデルを Int8 に量子化するスクリプト。
-ダウンロード不要、ローカルファイルのみで動作する。
+モデルのダウンロードと最適化を行うスクリプト。
+config.json で指定されたモデル ID を取得し、models/ フォルダ以下に準備します。
 """
 import os
 import shutil
-import ctranslate2
+import json
+import logging
+from faster_whisper import download_model
 
-# 設定
-LOCAL_MODEL_PATH = "/home/heppo/.cache/huggingface/hub/models--RoachLin--kotoba-whisper-v2.2-faster/snapshots/77dacdfbfa2f022e53974e8f463cf24051d0a6df"
-OUTPUT_DIR = "models/kotoba-whisper-v2.2-int8"
+# Logging setup
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - [CONVERT] %(message)s')
+logger = logging.getLogger("Converter")
+
+CONFIG_FILE = "config.json"
+MODELS_DIR = "models"
 
 def main():
-    print(f"--- Model Quantizer (Local) ---")
-    print(f"Source: {LOCAL_MODEL_PATH}")
-    print(f"Target: {OUTPUT_DIR}")
+    logger.info("--- Model Setup / Update ---")
     
-    if not os.path.exists(LOCAL_MODEL_PATH):
-        print(f"ERROR: Source model not found at {LOCAL_MODEL_PATH}")
+    # 1. Load Config
+    if not os.path.exists(CONFIG_FILE):
+        logger.error(f"{CONFIG_FILE} not found. Please run the GUI first.")
         return
+
+    with open(CONFIG_FILE, "r") as f:
+        config = json.load(f)
+    
+    model_id = config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
+    logger.info(f"Target Model: {model_id}")
+
+    # 2. Local folder name (safe version of model_id)
+    # models/kotoba-whisper-v2.2-faster のようにスラッシュ以降をフォルダ名にする
+    model_name = model_id.split("/")[-1]
+    output_dir = os.path.join(MODELS_DIR, model_name)
+    
+    # すでに変換済みのInt8版があるか、などの判定は複雑なので、
+    # シンプルに毎回 download_model を通す（あれば高速に終わる）
+    logger.info(f"Setting up model in: {output_dir}")
+    
+    try:
+        # download_model は CTranslate2 形式でダウンロード/キャッシュしてくれる
+        # local_files_only=False で Hugging Face から取得
+        path = download_model(model_id, output_dir=output_dir)
+        logger.info(f"Success! Model prepared at: {path}")
         
-    if os.path.exists(OUTPUT_DIR):
-        print(f"Output directory exists. Cleaning...")
-        shutil.rmtree(OUTPUT_DIR)
-    
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
-    
-    print("Quantizing to Int8...")
-    
-    # CTranslate2 の量子化API を使用
-    # Generator/Translator ではなく、モデルファイルを直接コピーし、
-    # 重み（model.bin）を量子化する。
-    # 実際には ctranslate2 は変換時にしか量子化できないため、
-    # 既にCT2形式のモデルを「再量子化」するにはファイルを直接操作するか、
-    # または faster_whisper 側で load 時に compute_type を指定するのが正解。
-    
-    # ... というわけで、既にある model.bin を使って、
-    # faster_whisper が load 時に int8 で解釈するように設定すれば、
-    # 追加の変換は不要かもしれない。
-    
-    # まずは単純にモデルファイルをコピーしてみる
-    for filename in os.listdir(LOCAL_MODEL_PATH):
-        src = os.path.join(LOCAL_MODEL_PATH, filename)
-        dst = os.path.join(OUTPUT_DIR, filename)
-        if os.path.isfile(src):
-            shutil.copy2(src, dst)
-            print(f"  Copied: {filename}")
-    
-    print("\nCopy Complete!")
-    print(f"Model available at: {os.path.abspath(OUTPUT_DIR)}")
-    print("Note: faster_whisper will load this with compute_type='int8' for quantization.")
+        # models/ 以下を Worker が見つけやすいように、config の local_model_size (パス用) を更新する
+        # ※ stt_worker_unified.py 側で解決する方が綺麗だが、一旦ここで完了報告
+        print(f"\n[SUCCESS] Model '{model_name}' is ready.")
+        
+    except Exception as e:
+        logger.error(f"Failed to setup model: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     main()

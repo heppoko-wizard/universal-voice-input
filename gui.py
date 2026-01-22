@@ -99,8 +99,14 @@ def main(page: ft.Page):
         value=hotkey_mode,
     )
 
-    # Model Path
-    txt_model_path = ft.TextField(label=t("model_path"), value=config.get("local_model_size", "models/kotoba-whisper-v2.2-int8"), read_only=True)
+    # Model Selection
+    model_id = config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
+    model_options = [ft.dropdown.Option(key=opt["key"], text=opt["text"]) for opt in i18n.get_model_options(lang)]
+    dd_model = ft.Dropdown(
+        label=t("model_select"),
+        options=model_options,
+        value=model_id,
+    )
     
     # Device Selection
     device_options = [ft.dropdown.Option(key="default", text="Default System Device")]
@@ -129,6 +135,7 @@ def main(page: ft.Page):
             config["ui_language"] = dd_lang.value
             config["hotkey_mode"] = dd_hotkey_mode.value
             config["add_punctuation"] = cb_punctuation.value
+            config["local_model_id"] = dd_model.value
             
             if dd_device.value == "default":
                 config["device_index"] = None
@@ -259,7 +266,7 @@ def main(page: ft.Page):
         cb_infinite,
         slider_timeout,
         ft.Container(height=10),
-        txt_model_path,
+        dd_model,
         btn_convert,
         ft.Text(t("convert_help"), size=12, color="grey"),
         ft.Container(

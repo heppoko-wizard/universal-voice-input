@@ -59,7 +59,16 @@ BLOCK_SIZE = 1024
 class UnifiedSTTWorker:
     def __init__(self):
         self.config = config_manager.load_config()
-        self.model_path = self.config.get("local_model_size", "models/kotoba-whisper-v2.2-int8")
+        
+        # モデルIDから読み込みパスを解決
+        self.model_id = self.config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
+        model_name = self.model_id.split("/")[-1]
+        self.model_path = os.path.join("models", model_name)
+        
+        # もし models/ 以下になければ、Hugging Face ID をそのまま使う（オートロード用）
+        if not os.path.exists(self.model_path):
+            self.model_path = self.model_id
+
         self.device = self.config.get("local_device", "cuda")
         self.compute_type = self.config.get("local_compute_type", "int8")
         self.timeout = self.config.get("hybrid_timeout", 300)

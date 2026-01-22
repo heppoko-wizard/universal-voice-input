@@ -16,13 +16,12 @@ DEFAULT_CONFIG = {
     "language": "ja",
     "hotkey": "<ctrl>+<alt>+<space>",
     "clipboard_restore": True,
-    "use_local_model": False,
-    "local_model_size": "base",
-    "local_device": "cpu",
+    "use_local_model": True,
+    "local_model_id": "RoachLin/kotoba-whisper-v2.2-faster",
+    "local_device": "cuda",
     "local_compute_type": "int8",
     "local_always_loaded": True,
-    "local_ram_cache": False,
-    "local_compute_type": "int8"
+    "local_ram_cache": False
 }
 
 def load_config():

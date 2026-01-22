@@ -22,6 +22,12 @@ TRANSLATIONS = {
         "timeout_zero": "0秒 (即時解放 - メモリ節約)",
         "timeout_hybrid": "{s}秒 (ハイブリッド)",
         "always_loaded": "常時保持 (推奨)",
+        "model_select": "使用するモデル",
+        "model_kotoba": "Kotoba-Whisper v2.2 (日本語特化/最速)",
+        "model_large_v3_turbo": "Large v3 Turbo (高速・高精度)",
+        "model_large_v3": "Large v3 (最高精度/VRAM大)",
+        "model_medium": "Medium (バランス型)",
+        "model_small": "Small (軽量/低スペック用)",
         "btn_convert": "モデルのダウンロードと最適化 (変換実行)",
         "convert_help": "※初回のみ実行が必要です。モデルをダウンロードし、高速なInt8形式に変換します。",
         "btn_save": "保存して適用 (再起動)",
@@ -52,6 +58,12 @@ TRANSLATIONS = {
         "timeout_zero": "0s (Immediate Unload - Save Memory)",
         "timeout_hybrid": "{s}s (Hybrid)",
         "always_loaded": "Keep Loaded (Recommended)",
+        "model_select": "STT Model Selection",
+        "model_kotoba": "Kotoba-Whisper v2.2 (Optimized for Japanese)",
+        "model_large_v3_turbo": "Whisper Large v3 Turbo (Fast & Accurate)",
+        "model_large_v3": "Whisper Large v3 (Best Accuracy / High VRAM)",
+        "model_medium": "Whisper Medium (Balanced)",
+        "model_small": "Whisper Small (Lightweight)",
         "btn_convert": "Download & Optimize Model (Run Conversion)",
         "convert_help": "*Required for first run. Downloads model and converts to fast Int8 format.",
         "btn_save": "Save & Apply (Restart)",
@@ -89,6 +101,12 @@ TRANSLATIONS = {
         "timeout_zero": "0秒 (立即释放 - 节省内存)",
         "timeout_hybrid": "{s}秒 (混合模式)",
         "always_loaded": "始终保持 (推荐)",
+        "model_select": "选择推论模型",
+        "model_kotoba": "Kotoba-Whisper v2.2 (日语优化/推荐)",
+        "model_large_v3_turbo": "Whisper Large v3 Turbo (快速高精度)",
+        "model_large_v3": "Whisper Large v3 (最高精度)",
+        "model_medium": "Whisper Medium (中等规模)",
+        "model_small": "Whisper Small (轻量型)",
         "btn_convert": "下载并优化模型 (运行转换)",
         "convert_help": "*首次运行必须执行。下载模型并转换为快速Int8格式。",
         "btn_save": "保存并应用 (重启)",
@@ -127,4 +145,14 @@ def get_language_options():
         {"key": "ja", "text": "日本語 (Japanese)"},
         {"key": "en", "text": "English"},
         {"key": "zh", "text": "简体中文 (Chinese)"}
+    ]
+
+def get_model_options(lang="ja"):
+    """モデル選択用のドロップダウン選択肢を返す"""
+    return [
+        {"key": "RoachLin/kotoba-whisper-v2.2-faster", "text": get_text("model_kotoba", lang)},
+        {"key": "deepdml/faster-whisper-large-v3-turbo-ct2-int8", "text": get_text("model_large_v3_turbo", lang)},
+        {"key": "Systran/faster-whisper-large-v3", "text": get_text("model_large_v3", lang)},
+        {"key": "Systran/faster-whisper-medium", "text": get_text("model_medium", lang)},
+        {"key": "Systran/faster-whisper-small", "text": get_text("model_small", lang)},
     ]
