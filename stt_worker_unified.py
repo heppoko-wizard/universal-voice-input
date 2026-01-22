@@ -296,6 +296,19 @@ class UnifiedSTTWorker:
 
     def process_task(self, audio_np, use_local, config):
         """実際の文字起こし処理"""
+        lang = config.get("language", "ja")
+        add_punctuation = config.get("add_punctuation", True)
+        
+        # 句読点を誘発するためのプロンプト
+        initial_prompt = ""
+        if add_punctuation:
+            prompts = {
+                "ja": "こんにちは、元気ですか。",
+                "en": "Hello, how are you.",
+                "zh": "你好，你好吗？"
+            }
+            initial_prompt = prompts.get(lang, "")
+
         if use_local:
             # ローカルモデルで処理
             if not self.model_ready_event.is_set():
@@ -306,7 +319,15 @@ class UnifiedSTTWorker:
 
             if self.model:
                 start_time = time.time()
-                segments, _ = self.model.transcribe(audio_np, beam_size=5, language="ja", vad_filter=True)
+                # 句読点制御のために initial_prompt と condition_on_previous_text を使用
+                segments, _ = self.model.transcribe(
+                    audio_np, 
+                    beam_size=5, 
+                    language=lang, 
+                    vad_filter=True,
+                    initial_prompt=initial_prompt if initial_prompt else None,
+                    condition_on_previous_text=True if initial_prompt else False
+                )
                 text_list = []
                 for s in segments:
                     text_list.append(s.text)
@@ -351,7 +372,8 @@ class UnifiedSTTWorker:
                 transcription = client.audio.transcriptions.create(
                     file=wav_buffer,
                     model=model_id,
-                    language="ja"
+                    language=lang,
+                    prompt=initial_prompt if initial_prompt else None
                 )
                 text = transcription.text.strip()
                 logger.info(f"Transcribed (Online, {time.time() - start_time:.2f}s): {text}")

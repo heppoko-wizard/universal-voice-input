@@ -27,6 +27,9 @@ def main(page: ft.Page):
     # Local Inference settings
     cb_local = ft.Checkbox(label=t("use_local"), value=config.get("use_local_model", True))
     
+    # Punctuation setting
+    cb_punctuation = ft.Checkbox(label=t("add_punctuation"), value=config.get("add_punctuation", True))
+    
     # Memory Management Settings
     current_timeout = config.get("local_model_timeout", -1)
     
@@ -125,6 +128,7 @@ def main(page: ft.Page):
             config["api_keys"]["groq"] = api_groq.value
             config["ui_language"] = dd_lang.value
             config["hotkey_mode"] = dd_hotkey_mode.value
+            config["add_punctuation"] = cb_punctuation.value
             
             if dd_device.value == "default":
                 config["device_index"] = None
@@ -287,6 +291,7 @@ def main(page: ft.Page):
             content=ft.Column([
                 ft.Text(t("inference_settings"), size=18, weight="bold"),
                 cb_local,
+                cb_punctuation,
                 container_groq
             ])
         )
