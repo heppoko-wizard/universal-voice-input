@@ -139,6 +139,11 @@ class WorkerManager:
                         self.status_callback(status)
         except Exception as e:
             print(f"Monitor error: {e}")
+        
+        # ワーカープロセス終了時: 録音状態を確実にリセット
+        print("[WORKER] Process exited. Resetting state.")
+        if self.status_callback:
+            self.status_callback("READY")
 
     def send_command(self, cmd):
         self.ensure_running()
@@ -195,6 +200,9 @@ class STTDaemonAppIndicator:
         # ホットキー設定
         self.setup_hotkey()
         
+        # 起動時マイクチェック（バックグラウンド）
+        threading.Thread(target=self._startup_mic_check, daemon=True).start()
+        
         print(f"--- STT Daemon (AppIndicator) ---")
         
     def rebuild_menu(self):
@@ -227,6 +235,68 @@ class STTDaemonAppIndicator:
         
     def on_worker_status(self, status):
         self.overlay_mgr.send_command(status)
+        # ワーカーがREADYに戻った場合、デーモン側の状態もリセット
+        # （録音エラー時のデッドロック防止）
+        if status == "READY":
+            self.recording = False
+        elif status == "UNLOADED":
+            # モデルアンロード完了 → オーバーレイをクリア
+            self.recording = False
+            self.overlay_mgr.send_command("READY")
+        elif status == "MODEL_ERROR":
+            self.recording = False
+            self.overlay_mgr.send_command("READY")
+            import i18n
+            lang = self.config.get("ui_language", "ja")
+            self._send_notification(
+                "STT - Model Error",
+                i18n.get_text("model_load_error", lang),
+                "critical"
+            )
+
+    def _startup_mic_check(self):
+        """起動時のマイクチェック（バックグラウンド実行）"""
+        import i18n
+        try:
+            import mic_checker
+        except ImportError:
+            print("mic_checker module not found, skipping mic check")
+            return
+        
+        lang = self.config.get("ui_language", "ja")
+        sample_rate = self.config.get("sample_rate", 44100)
+        preferred = self.config.get("default_device_index")
+        
+        print(f"Mic check: preferred device = {preferred}")
+        result = mic_checker.find_working_device(preferred_index=preferred, sample_rate=sample_rate)
+        
+        if result["device_index"] is not None and not result["fallback"]:
+            # 正常
+            msg = i18n.get_text("mic_check_ok", lang, name=result["device_name"])
+            print(f"Mic check: {msg}")
+        elif result["fallback"]:
+            # フォールバック発生 → 設定を更新して通知
+            self.config["device_index"] = result["device_index"]
+            config_manager.save_config(self.config)
+            
+            msg = i18n.get_text("mic_check_fallback", lang,
+                               name=result["preferred_name"],
+                               new_name=result["device_name"])
+            print(f"Mic check: {msg}")
+            self._send_notification("STT - Mic Check", msg, "warning")
+        else:
+            # 全滅
+            msg = i18n.get_text("mic_check_no_device", lang)
+            print(f"Mic check: {msg}")
+            self._send_notification("STT - Mic Check", msg, "error")
+    
+    def _send_notification(self, title, message, urgency="normal"):
+        """デスクトップ通知を送信"""
+        try:
+            cmd = ["notify-send", "-u", urgency, "-i", ICON_PATH, title, message]
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception as e:
+            print(f"Notification error: {e}")
 
     def on_activate(self):
         """Toggle mode の動作"""
@@ -337,6 +407,8 @@ class STTDaemonAppIndicator:
     def run(self):
         # シグナルハンドラ設定
         signal.signal(signal.SIGINT, signal.SIG_DFL)
+        # SIGUSR1: GUIからの設定再読み込みシグナル
+        signal.signal(signal.SIGUSR1, lambda sig, frame: GLib.idle_add(self.reload_config))
         Gtk.main()
 
 if __name__ == "__main__":

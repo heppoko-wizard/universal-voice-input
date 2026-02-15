@@ -41,20 +41,20 @@ def main():
     # 2. Local folder name (safe version of model_id)
     # models/kotoba-whisper-v2.2-faster のようにスラッシュ以降をフォルダ名にする
     model_name = model_id.split("/")[-1]
-    output_dir = os.path.join(MODELS_DIR, model_name)
+    output_dir = os.path.abspath(os.path.join(MODELS_DIR, model_name))
     
-    # すでに変換済みのInt8版があるか、などの判定は複雑なので、
-    # シンプルに毎回 download_model を通す（あれば高速に終わる）
     logger.info(f"Setting up model in: {output_dir}")
+    
+    # 既存の入れ子になった古い形式などがあれば、ユーザーが混乱するため
+    # 既存のフォルダがある場合はそのまま download_model に任せる（faster-whisperが適切に更新する）
     
     try:
         # download_model は CTranslate2 形式でダウンロード/キャッシュしてくれる
         # local_files_only=False で Hugging Face から取得
+        # 指定した output_dir に直接展開されるようにする
         path = download_model(model_id, output_dir=output_dir)
         logger.info(f"Success! Model prepared at: {path}")
         
-        # models/ 以下を Worker が見つけやすいように、config の local_model_size (パス用) を更新する
-        # ※ stt_worker_unified.py 側で解決する方が綺麗だが、一旦ここで完了報告
         print(f"\n[SUCCESS] Model '{model_name}' is ready.")
         
     except Exception as e:

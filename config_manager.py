@@ -12,6 +12,7 @@ DEFAULT_CONFIG = {
         "google": ""
     },
     "device_index": None, # None means default
+    "default_device_index": None, # ユーザーが明示的に選んだデフォルト
     "sample_rate": 44100,
     "language": "ja",
     "hotkey": "<ctrl>+<alt>+<space>",

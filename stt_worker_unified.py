@@ -52,7 +52,8 @@ def log_memory_usage(label=""):
         pass
 
 # --- Constants ---
-SAMPLE_RATE = 16000
+DEFAULT_SAMPLE_RATE = 16000
+INFERENCE_SAMPLE_RATE = 16000  # Whisperモデルが要求するサンプルレート
 CHANNELS = 1
 BLOCK_SIZE = 1024
 
@@ -62,12 +63,31 @@ class UnifiedSTTWorker:
         
         # モデルIDから読み込みパスを解決
         self.model_id = self.config.get("local_model_id", "RoachLin/kotoba-whisper-v2.2-faster")
-        model_name = self.model_id.split("/")[-1]
-        self.model_path = os.path.join("models", model_name)
         
-        # もし models/ 以下になければ、Hugging Face ID をそのまま使う（オートロード用）
-        if not os.path.exists(self.model_path):
-            self.model_path = self.model_id
+        # プロジェクトルートからの絶対パスを解決
+        project_root = os.path.dirname(os.path.abspath(__file__))
+        
+        # 絶対パス or 相対パス（ローカルディレクトリ）の場合はそのまま使用
+        expanded_id = os.path.expanduser(self.model_id.rstrip("/"))
+        if os.path.isabs(expanded_id) or expanded_id.startswith("."):
+            if os.path.exists(expanded_id):
+                self.model_path = expanded_id
+                logger.info(f"Using local model from absolute path: {self.model_path}")
+            else:
+                self.model_path = expanded_id
+                logger.warning(f"Model path does not exist: {expanded_id}")
+        else:
+            # HuggingFace ID形式 (user/model) → models/ 配下を探す
+            model_name = self.model_id.split("/")[-1]
+            local_path = os.path.abspath(os.path.join(project_root, "models", model_name))
+            
+            if os.path.exists(local_path):
+                self.model_path = local_path
+                logger.info(f"Using local model from: {self.model_path}")
+            else:
+                self.model_path = self.model_id
+                logger.info(f"Local model folder not found at {local_path}.")
+                logger.info(f"Will fallback to Hugging Face Hub/Cache: {self.model_id}")
 
         self.device = self.config.get("local_device", "cuda")
         self.compute_type = self.config.get("local_compute_type", "int8")
@@ -137,6 +157,7 @@ class UnifiedSTTWorker:
             # モデルの削除
             self.model = None
             self.model_ready_event.clear()
+            self.model_load_error = None
             
             # GCを徹底
             for _ in range(3):
@@ -145,13 +166,7 @@ class UnifiedSTTWorker:
             log_memory_usage("After Unload")
             print("[STATUS] UNLOADED")
             sys.stdout.flush()
-            
-            # プロセスを終了してOSにメモリを完全に返却する
-            # デーモン側がプロセスの死を検知して次回のSTART時に再起動する
-            logger.info("Exiting worker process to ensure complete memory cleanup.")
-            time.sleep(0.5) # stdoutのフラッシュ時間を確保
-            import os
-            os._exit(0)
+            logger.info("Model unloaded. Worker stays alive for next recording.")
 
     def load_model(self, initial=False):
         if self.model is not None or self.model_loading:
@@ -160,8 +175,9 @@ class UnifiedSTTWorker:
         def _load():
             try:
                 self.model_loading = True
+                self.model_load_error = None
                 log_memory_usage("Before Load")
-                logger.info(f"Loading model: {os.path.basename(self.model_path)}")
+                logger.info(f"Loading model: {self.model_path}")
                 
                 from faster_whisper import WhisperModel
                 self.model = WhisperModel(
@@ -179,6 +195,13 @@ class UnifiedSTTWorker:
                     sys.stdout.flush()
             except Exception as e:
                 logger.error(f"Failed to load model: {e}")
+                self.model_load_error = str(e)
+                self.model = None
+                # イベントをセットして待機中のprocess_taskを解放
+                self.model_ready_event.set()
+                # デーモンのフリーズ防止
+                print("[STATUS] READY")
+                sys.stdout.flush()
             finally:
                 self.model_loading = False
 
@@ -218,15 +241,39 @@ class UnifiedSTTWorker:
         def _record_loop():
             device_idx = self.config.get("device_index")
             if device_idx == "default": device_idx = None
+            sample_rate = self.config.get("sample_rate", DEFAULT_SAMPLE_RATE)
+            
+            # デバイスのネイティブチャンネル数を取得
+            rec_channels = CHANNELS
+            try:
+                if device_idx is not None:
+                    dev_info = sd.query_devices(device_idx)
+                    max_ch = dev_info.get("max_input_channels", 1)
+                    if max_ch >= 2 and CHANNELS == 1:
+                        # hwデバイスはモノラル非対応の場合がある → ステレオで録音
+                        rec_channels = 2
+                        logger.info(f"Device {device_idx} requires {max_ch}ch, recording in stereo")
+            except Exception as e:
+                logger.warning(f"Could not query device info: {e}")
+            
+            def _callback(indata, frames, time_info, status):
+                if rec_channels > 1:
+                    # ステレオ→モノラル変換（左チャンネルのみ or 平均）
+                    mono = indata.mean(axis=1, keepdims=True)
+                    self._audio_callback(mono, frames, time_info, status)
+                else:
+                    self._audio_callback(indata, frames, time_info, status)
             
             try:
-                with sd.InputStream(samplerate=SAMPLE_RATE, device=device_idx, channels=CHANNELS, callback=self._audio_callback):
-                    logger.info("Recording STARTED")
+                with sd.InputStream(samplerate=sample_rate, device=device_idx, channels=rec_channels, callback=_callback):
+                    logger.info(f"Recording STARTED (device={device_idx}, rate={sample_rate}Hz, channels={rec_channels})")
                     while not self.stop_recording_event.is_set():
                         time.sleep(0.05)
             except Exception as e:
                 logger.error(f"Recording error: {e}")
                 self.recording = False
+                print("[STATUS] READY")
+                sys.stdout.flush()
         
         self.recording_thread = threading.Thread(target=_record_loop, daemon=True)
         self.recording_thread.start()
@@ -260,6 +307,15 @@ class UnifiedSTTWorker:
 
         # 前処理 (データをキューへ)
         audio_np = np.concatenate(audio_data, axis=0).flatten().astype(np.float32)
+        
+        # 録音サンプルレートが推論用(16kHz)と異なる場合はリサンプリング
+        rec_sample_rate = self.config.get("sample_rate", DEFAULT_SAMPLE_RATE)
+        if rec_sample_rate != INFERENCE_SAMPLE_RATE:
+            import scipy.signal
+            num_samples = int(len(audio_np) * INFERENCE_SAMPLE_RATE / rec_sample_rate)
+            audio_np = scipy.signal.resample(audio_np, num_samples).astype(np.float32)
+            logger.info(f"Resampled audio: {rec_sample_rate}Hz -> {INFERENCE_SAMPLE_RATE}Hz")
+        
         if speed_factor > 1.0:
             indices = np.arange(0, len(audio_np), speed_factor)
             audio_np = audio_np[indices.astype(int)]
@@ -324,7 +380,16 @@ class UnifiedSTTWorker:
                 logger.info("Waiting for model to load...")
                 if not self.model_ready_event.wait(timeout=30):
                     logger.error("Model load timed out.")
+                    print("[STATUS] MODEL_ERROR")
+                    sys.stdout.flush()
                     return
+
+            # モデルロードエラーチェック
+            if hasattr(self, 'model_load_error') and self.model_load_error:
+                logger.error(f"Model load failed: {self.model_load_error}")
+                print("[STATUS] MODEL_ERROR")
+                sys.stdout.flush()
+                return
 
             if self.model:
                 start_time = time.time()
@@ -362,7 +427,7 @@ class UnifiedSTTWorker:
                 with wave.open(wav_buffer, 'wb') as wav_file:
                     wav_file.setnchannels(CHANNELS)
                     wav_file.setsampwidth(2)
-                    wav_file.setframerate(SAMPLE_RATE)
+                    wav_file.setframerate(INFERENCE_SAMPLE_RATE)  # リサンプリング済みの16kHz
                     audio_int16 = (audio_np * 32767).astype(np.int16)
                     wav_file.writeframes(audio_int16.tobytes())
                 

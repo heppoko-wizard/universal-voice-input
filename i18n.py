@@ -35,6 +35,25 @@ TRANSLATIONS = {
         "status_saving": "設定を保存中...",
         "status_saved": "保存完了。再起動しています...",
         "status_error": "エラー: {e}",
+        "set_default_device": "デフォルトに設定",
+        "default_device_set": "デフォルトデバイスを {name} に設定しました",
+        "mic_check_fallback": "デフォルトマイク ({name}) に不具合があるため、{new_name} に切り替えました",
+        "mic_check_no_device": "音声を検出できるマイクが見つかりません。マイクの接続を確認してください",
+        "mic_check_ok": "マイク確認OK: {name}",
+        "custom_model": "カスタムモデル",
+        "custom_model_hint": "HF ID (user/model) または model.bin があるフォルダのパス。空ならプリセットを使用",
+        "model_load_error": "モデルの読み込みに失敗しました。パスを確認してください",
+        "model_path_not_found": "フォルダが存在しません: {path}",
+        "model_bin_not_found": "model.bin が見つかりません: {path}",
+        "changes_applied": "【変更内容】",
+        "no_changes": "変更はありません",
+        "daemon_restarted": "デーモンに設定を反映しました",
+        "daemon_not_found": "デーモンが見つかりません（手動で再起動してください）",
+        "mode_online": "オンライン (Groq)",
+        "mode_local": "ローカルプリセット",
+        "mode_custom": "カスタムモデル",
+        "model_mode_label": "モデルモード",
+        "custom_model_empty": "カスタムモデルのパスを入力してください",
     },
     "en": {
         "title": "STT Config Editor",
@@ -77,7 +96,26 @@ TRANSLATIONS = {
         "console_start": "Starting conversion...\n",
         "console_success": "\nSUCCESS: Model converted.",
         "console_failed": "\nFAILED: Exit code {code}",
-        "console_error": "\nError: {error}"
+        "console_error": "\nError: {error}",
+        "set_default_device": "Set as Default",
+        "default_device_set": "Default device set to {name}",
+        "mic_check_fallback": "Default mic ({name}) has issues. Switched to {new_name}",
+        "mic_check_no_device": "No working microphone found. Please check your mic connection",
+        "mic_check_ok": "Mic OK: {name}",
+        "custom_model": "Custom Model",
+        "custom_model_hint": "HF ID (user/model) or path to folder containing model.bin. Empty = use preset",
+        "model_load_error": "Failed to load model. Please check the model path",
+        "model_path_not_found": "Folder not found: {path}",
+        "model_bin_not_found": "model.bin not found in: {path}",
+        "changes_applied": "Changes:",
+        "no_changes": "No changes",
+        "daemon_restarted": "Settings applied to daemon",
+        "daemon_not_found": "Daemon not found (please restart manually)",
+        "mode_online": "Online (Groq)",
+        "mode_local": "Local Preset",
+        "mode_custom": "Custom Model",
+        "model_mode_label": "Model Mode",
+        "custom_model_empty": "Please enter a custom model path",
     },
     "zh": {
         "title": "STT 配置编辑器",
@@ -120,7 +158,26 @@ TRANSLATIONS = {
         "console_start": "开始转换...\n",
         "console_success": "\n成功：模型已转换。",
         "console_failed": "\n失败：退出代码 {code}",
-        "console_error": "\n错误：{error}"
+        "console_error": "\n错误：{error}",
+        "set_default_device": "设为默认",
+        "default_device_set": "默认设备已设为 {name}",
+        "mic_check_fallback": "默认麦克风 ({name}) 有问题，已切换到 {new_name}",
+        "mic_check_no_device": "未找到可用麦克风，请检查麦克风连接",
+        "mic_check_ok": "麦克风正常: {name}",
+        "custom_model": "自定义模型",
+        "custom_model_hint": "HF ID (user/model) 或 model.bin 所在文件夹路径。留空则使用预设",
+        "model_load_error": "模型加载失败，请检查模型路径",
+        "model_path_not_found": "文件夹不存在: {path}",
+        "model_bin_not_found": "model.bin 未找到: {path}",
+        "changes_applied": "【变更内容】",
+        "no_changes": "没有变更",
+        "daemon_restarted": "已将设置应用到守护进程",
+        "daemon_not_found": "未找到守护进程（请手动重启）",
+        "mode_online": "在线 (Groq)",
+        "mode_local": "本地预设",
+        "mode_custom": "自定义模型",
+        "model_mode_label": "模型模式",
+        "custom_model_empty": "请输入自定义模型路径",
     }
 }
 
@@ -148,11 +205,15 @@ def get_language_options():
     ]
 
 def get_model_options(lang="ja"):
-    """モデル選択用のドロップダウン選択肢を返す"""
+    """モデル選択用のドロップダウン選択肢を返す。表示名にHF IDを含む。"""
+    models = [
+        {"key": "RoachLin/kotoba-whisper-v2.2-faster", "label_key": "model_kotoba"},
+        {"key": "deepdml/faster-whisper-large-v3-turbo-ct2-int8", "label_key": "model_large_v3_turbo"},
+        {"key": "Systran/faster-whisper-large-v3", "label_key": "model_large_v3"},
+        {"key": "Systran/faster-whisper-medium", "label_key": "model_medium"},
+        {"key": "Systran/faster-whisper-small", "label_key": "model_small"},
+    ]
     return [
-        {"key": "RoachLin/kotoba-whisper-v2.2-faster", "text": get_text("model_kotoba", lang)},
-        {"key": "deepdml/faster-whisper-large-v3-turbo-ct2-int8", "text": get_text("model_large_v3_turbo", lang)},
-        {"key": "Systran/faster-whisper-large-v3", "text": get_text("model_large_v3", lang)},
-        {"key": "Systran/faster-whisper-medium", "text": get_text("model_medium", lang)},
-        {"key": "Systran/faster-whisper-small", "text": get_text("model_small", lang)},
+        {"key": m["key"], "text": f"{get_text(m['label_key'], lang)}  [{m['key']}]"}
+        for m in models
     ]

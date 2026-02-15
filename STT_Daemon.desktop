@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=STT Daemon
+Comment=音声入力デーモンをバックグラウンドで起動
+Exec=bash -c 'cd ~/ai_tools/speech_to_text && bash start_stt.sh'
+Icon=/home/heppo/ai_tools/speech_to_text/stt_icon.png
+Terminal=false
+Categories=Utility;
+StartupNotify=false
