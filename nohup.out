@@ -109,3 +109,4 @@ Hotkey: STOP (Toggle)
 [WORKER] [92m15:24:32 - LiteLLM:INFO[0m: utils.py:1629 - Wrapper: Completed Call, calling success_handler
 [WORKER] 15:24:32 - [WORKER] Wrapper: Completed Call, calling success_handler
 [WORKER] 15:24:32 - [WORKER] Transcribed (Online/groq, 0.32s): これでちゃんと動くわけ。
+[WORKER] 15:29:32 - [WORKER] Timeout (300s). Exiting.

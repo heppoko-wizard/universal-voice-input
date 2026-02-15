@@ -56,4 +56,48 @@ GPU アクセラレーション（CUDA）を活用し、ローカルモデルの
 
 - Python 3.10 以上
 - FFmpeg
+- NVIDIA GPU and CUDA Toolkit 12+ (Optional, for GPU acceleration)
+
+## Installation & Usage
+
+### Windows
+1. Right-click `setup_windows.ps1` and select "Run with PowerShell".
+2. Wait for the setup to complete.
+3. A shortcut **"Open-STT-Tool"** will be created on your Desktop.
+4. Double-click the shortcut to start the tool.
+
+### macOS
+1. Open Terminal and navigate to the folder.
+2. Run `sh setup_macos.sh`.
+3. A file **`start_stt_gui.command`** will be created in the folder.
+4. Double-click `start_stt_gui.command` to start.
+
+### Linux
+1. Run `sh setup_linux.sh`.
+2. Use `./start_stt.sh` or the created desktop shortcut.
+
+---
+
+## 必要条件
+
+- Python 3.10 以上
+- FFmpeg
 - NVIDIA GPU および CUDA Toolkit 12以上（任意、GPU加速を利用する場合）
+
+## インストールと使い方
+
+### Windows
+1. `setup_windows.ps1` を右クリックし、「PowerShellで実行」を選択します。
+2. セットアップが完了するのを待ちます。
+3. デスクトップに **「Open-STT-Tool」** というショートカットが作成されます。
+4. これをダブルクリックして起動します。
+
+### macOS
+1. ターミナルを開き、フォルダに移動します。
+2. `sh setup_macos.sh` を実行します。
+3. フォルダ内に **`start_stt_gui.command`** というファイルが作成されます。
+4. これをダブルクリックして起動します。
+
+### Linux
+1. `sh setup_linux.sh` を実行します。
+2. `./start_stt.sh` または作成されたデスクトップショートカットを使用します。
