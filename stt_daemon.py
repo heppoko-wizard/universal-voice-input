@@ -200,8 +200,8 @@ class STTDaemonAppIndicator:
         # ホットキー設定
         self.setup_hotkey()
         
-        # 起動時マイクチェック（無効化: device_indexを誤って上書きする問題があるため）
-        # threading.Thread(target=self._startup_mic_check, daemon=True).start()
+        # 起動時マイクチェック（バックグラウンド）
+        threading.Thread(target=self._startup_mic_check, daemon=True).start()
         
         print(f"--- STT Daemon (AppIndicator) ---")
         
@@ -255,7 +255,7 @@ class STTDaemonAppIndicator:
             )
 
     def _startup_mic_check(self):
-        """起動時のマイクチェック（バックグラウンド実行）"""
+        """起動時のマイクチェック（警告のみ、config書き換えなし）"""
         import i18n
         try:
             import mic_checker
@@ -263,32 +263,24 @@ class STTDaemonAppIndicator:
             print("mic_checker module not found, skipping mic check")
             return
         
-        lang = self.config.get("ui_language", "ja")
+        device_idx = self.config.get("device_index")
         sample_rate = self.config.get("sample_rate", 44100)
-        preferred = self.config.get("default_device_index")
         
-        print(f"Mic check: preferred device = {preferred}")
-        result = mic_checker.find_working_device(preferred_index=preferred, sample_rate=sample_rate)
+        print(f"Mic check: device = {device_idx}")
+        result = mic_checker.check_device(device_idx, sample_rate=sample_rate)
         
-        if result["device_index"] is not None and not result["fallback"]:
-            # 正常
-            msg = i18n.get_text("mic_check_ok", lang, name=result["device_name"])
-            print(f"Mic check: {msg}")
-        elif result["fallback"]:
-            # フォールバック発生 → 設定を更新して通知
-            self.config["device_index"] = result["device_index"]
-            config_manager.save_config(self.config)
-            
-            msg = i18n.get_text("mic_check_fallback", lang,
-                               name=result["preferred_name"],
-                               new_name=result["device_name"])
-            print(f"Mic check: {msg}")
+        if result["error"]:
+            # デバイスを開けなかった
+            msg = f"マイク ({result['device_name']}) にアクセスできません: {result['error']}"
+            print(f"Mic check: WARNING - {msg}")
+            self._send_notification("STT - Mic Check", msg, "warning")
+        elif result["silent"]:
+            # 完全無音
+            msg = f"マイク ({result['device_name']}) が無音です。接続を確認してください。"
+            print(f"Mic check: WARNING - {msg}")
             self._send_notification("STT - Mic Check", msg, "warning")
         else:
-            # 全滅
-            msg = i18n.get_text("mic_check_no_device", lang)
-            print(f"Mic check: {msg}")
-            self._send_notification("STT - Mic Check", msg, "error")
+            print(f"Mic check: OK - {result['device_name']} (RMS={result['rms']:.6f})")
     
     def _send_notification(self, title, message, urgency="normal"):
         """デスクトップ通知を送信"""
