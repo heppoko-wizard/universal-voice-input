@@ -149,3 +149,53 @@ def type_text(text):
     time.sleep(0.1)
     paste_text()
 
+def set_autostart(enabled: bool):
+    """
+    Enable or disable auto-start on login.
+    Linux: systemd
+    macOS: LaunchAgents
+    Windows: Startup folder
+    """
+    plat = get_platform()
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    try:
+        if plat == "linux":
+            # systemctl --user は setup_linux.sh で登録済みと仮定
+            cmd = ["systemctl", "--user", "enable" if enabled else "disable", "stt-tool.service"]
+            subprocess.run(cmd, check=False, stderr=subprocess.DEVNULL)
+            
+        elif plat == "mac":
+            plist_path = os.path.expanduser("~/Library/LaunchAgents/com.stt-tool.plist")
+            if os.path.exists(plist_path):
+                # RunAtLoad を書き換えるか、load/unload で制御
+                # ここではシンプルに load/unload (unloadしてもplistは残る)
+                if enabled:
+                    subprocess.run(["launchctl", "load", plist_path], check=False, stderr=subprocess.DEVNULL)
+                else:
+                    subprocess.run(["launchctl", "unload", plist_path], check=False, stderr=subprocess.DEVNULL)
+                    
+        elif plat == "windows":
+            import winshell
+            from win32com.client import Dispatch
+            
+            startup_path = os.path.join(os.environ["APPDATA"], r"Microsoft\Windows\Start Menu\Programs\Startup")
+            shortcut_path = os.path.join(startup_path, "Open-STT-Tool.lnk")
+            
+            if enabled:
+                if not os.path.exists(shortcut_path):
+                    # 起動用バッチファイル（ランチャー）があるはずなのでそれへのショートカットを作成
+                    target = os.path.join(script_dir, "start_stt_gui.bat")
+                    if os.path.exists(target):
+                        shell = Dispatch('WScript.Shell')
+                        shortcut = shell.CreateShortCut(shortcut_path)
+                        shortcut.Targetpath = target
+                        shortcut.WorkingDirectory = script_dir
+                        shortcut.IconLocation = os.path.join(script_dir, "venv", "Scripts", "python.exe") + ",0"
+                        shortcut.save()
+            else:
+                if os.path.exists(shortcut_path):
+                    os.remove(shortcut_path)
+    except Exception as e:
+        print(f"Failed to set autostart: {e}")
+

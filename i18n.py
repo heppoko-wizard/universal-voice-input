@@ -59,6 +59,7 @@ TRANSLATIONS = {
         "api_key_label": "APIキー",
         "online_model_label": "モデル名 (provider/model)",
         "api_base_label": "エンドポイントURL",
+        "auto_start": "ログイン時に自動起動",
     },
     "en": {
         "title": "STT Config Editor",
@@ -126,6 +127,7 @@ TRANSLATIONS = {
         "api_key_label": "API Key",
         "online_model_label": "Model Name (provider/model)",
         "api_base_label": "Endpoint URL",
+        "auto_start": "Auto-start on Login",
     },
     "zh": {
         "title": "STT 配置编辑器",
@@ -193,6 +195,7 @@ TRANSLATIONS = {
         "api_key_label": "API密钥",
         "online_model_label": "模型名 (provider/model)",
         "api_base_label": "端点URL",
+        "auto_start": "登录时自动启动",
     }
 }
 

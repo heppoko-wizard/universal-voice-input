@@ -10,3 +10,4 @@ pystray
 Pillow
 litellm
 flet
+pywin32; sys_platform == 'win32'

@@ -3,6 +3,7 @@ import config_manager
 import os
 import threading
 import i18n
+import platform_utils
 
 def main(page: ft.Page):
     config = config_manager.load_config()
@@ -185,6 +186,11 @@ def main(page: ft.Page):
     cb_punctuation = ft.Checkbox(
         label=t("add_punctuation"),
         value=config.get("add_punctuation", True)
+    )
+
+    cb_auto_start = ft.Checkbox(
+        label=t("auto_start"),
+        value=config.get("auto_start", False)
     )
     
     # Speed Factor
@@ -369,6 +375,7 @@ def main(page: ft.Page):
             config["ui_language"] = dd_lang.value
             config["hotkey_mode"] = dd_hotkey_mode.value
             config["add_punctuation"] = cb_punctuation.value
+            config["auto_start"] = cb_auto_start.value
             
             # モデルモード
             mode = rg_mode.value
@@ -433,6 +440,7 @@ def main(page: ft.Page):
                 ("local_model_timeout", t("timeout_label")),
                 ("speed_factor", t("speed_factor")),
                 ("add_punctuation", t("add_punctuation")),
+                ("auto_start", t("auto_start")),
             ]
             for key, label in check_keys:
                 old_val = original_config.get(key)
@@ -447,6 +455,9 @@ def main(page: ft.Page):
                 changes.append(f"• {t('groq_key')}: ****")
             
             config_manager.save_config(config)
+            
+            # 自動起動の設定反映
+            platform_utils.set_autostart(cb_auto_start.value)
             
             # デーモンにSIGUSR1を送信して再読み込み
             daemon_restarted = False
@@ -536,7 +547,8 @@ def main(page: ft.Page):
             padding=15,
             content=ft.Column([
                 ft.Text(t("api_settings"), size=18, weight="bold"),
-                dd_lang
+                dd_lang,
+                cb_auto_start,
             ])
         )
     )
