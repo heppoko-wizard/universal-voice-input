@@ -5,506 +5,107 @@ Spawning worker...
 Hotkey Listener Started: <ctrl>+<space> (Mode: toggle)
 --- STT Daemon (AppIndicator) ---
 Mic check: preferred device = 3
-[WORKER] 14:15:47 - [WORKER] Initial Memory Usage: 60.16 MB
-[WORKER] 14:15:47 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:15:47 - [WORKER] Model timeout config: 90
-[WORKER] 14:15:47 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+Expression 'parameters->channelCount <= maxChans' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 1514
+Expression 'ValidateParameters( inputParameters, hostApi, StreamDirection_In )' failed in 'src/hostapi/alsa/pa_linux_alsa.c', line: 2818
+Device 3 check failed: Error opening InputStream: Invalid number of channels [PaErrorCode -9998]
+Preferred device 3 (Device 3) is silent or failed: Error opening InputStream: Invalid number of channels [PaErrorCode -9998]
+[WORKER] 15:15:06 - [WORKER] Initial Memory Usage: 59.97 MB
+[WORKER] 15:15:06 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
+[WORKER] 15:15:06 - [WORKER] Model timeout config: 0
+[WORKER] 15:15:06 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
 [WORKER] [STATUS] READY
-[WORKER] 14:15:47 - [WORKER] Interactive Loop Started
-Mic check: マイク確認OK: Blue Microphones: USB Audio (hw:1,0)
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:16:05 - [WORKER] Memory Usage [Before Load]: RSS=47.77 MB, Peak=60.16 MB
-[WORKER] 14:16:05 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:16:05 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:16:06 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:16:07 - [WORKER] Recording STOPPED
-[WORKER] 14:16:07 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:16:07 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:16:07 - [WORKER] Waiting for model to load...
-[WORKER] 14:16:09 - [WORKER] Model loaded successfully.
-[WORKER] 14:16:09 - [WORKER] Memory Usage [After Load]: RSS=666.96 MB, Peak=942.71 MB
-[WORKER] 14:16:09 - [WORKER] Processing audio with duration 00:00.951
-[WORKER] 14:16:09 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:16:09 - [WORKER] Transcribed (Local, 0.43s): こんにちは。
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:16:15 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-Hotkey: STOP (Toggle)
-[WORKER] 14:16:18 - [WORKER] Recording STOPPED
-[WORKER] 14:16:18 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:16:18 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:16:18 - [WORKER] Processing audio with duration 00:02.404
-[WORKER] 14:16:18 - [WORKER] VAD filter removed 00:00.400 of audio
-[WORKER] 14:16:18 - [WORKER] Transcribed (Local, 0.15s): 私の名前はソータです。
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:16:22 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-Hotkey: STOP (Toggle)
-[WORKER] 14:16:24 - [WORKER] Recording STOPPED
-[WORKER] 14:16:24 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:16:24 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:16:24 - [WORKER] Processing audio with duration 00:02.909
-[WORKER] 14:16:24 - [WORKER] VAD filter removed 00:00.208 of audio
-[WORKER] 14:16:25 - [WORKER] Transcribed (Local, 0.14s): 早い、こいつ、動くぞ!
+[WORKER] 15:15:06 - [WORKER] Interactive Loop Started
+Mic check: デフォルトマイク (Device 3) に不具合があるため、Blue Microphones: USB Audio (hw:1,0) に切り替えました
 Opening GUI...
-/home/heppo/ai_tools/speech_to_text/gui.py:499: DeprecationWarning: app() is deprecated since version 0.70.0. Use run() instead.
+/home/heppo/ai_tools/speech_to_text/gui.py:678: DeprecationWarning: app() is deprecated since version 0.70.0. Use run() instead.
   ft.app(target=main)
 package:media_kit_libs_linux registered.
-/home/heppo/ai_tools/speech_to_text/gui.py:330: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
-  btn_save = ft.ElevatedButton(t("btn_save"), on_click=save_settings, icon="save")
-/home/heppo/ai_tools/speech_to_text/gui.py:370: DeprecationWarning: ElevatedButton is deprecated since version 0.70.0 and will be removed in version 1.0. Use Button instead.
-  btn_convert = ft.ElevatedButton(t("btn_convert"), on_click=run_converter, icon="download")
+Unhandled error in main() handler
+Traceback (most recent call last):
+  File "/home/heppo/ai_tools/speech_to_text/venv/lib/python3.12/site-packages/flet/app.py", line 271, in on_session_created
+    main(session.page)
+  File "/home/heppo/ai_tools/speech_to_text/gui.py", line 178, in main
+    dd_provider = ft.Dropdown(
+                  ^^^^^^^^^^^^
+TypeError: Dropdown.__init__() got an unexpected keyword argument 'on_change'
+embedder.cc (2575): 'FlutterEngineRemoveView' returned 'kInvalidArguments'. Remove view info was invalid. The implicit view cannot be removed.
+
+** (flet:46909): WARNING **: 15:15:15.149: Failed to cleanup compositor shaders, unable to make OpenGL context current
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.149: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.150: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.150: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.150: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.203: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.203: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.203: gtk_window_get_position: assertion 'GTK_IS_WINDOW (window)' failed
+
+(flet:46909): Gtk-CRITICAL **: 15:15:15.203: gtk_window_get_size: assertion 'GTK_IS_WINDOW (window)' failed
+
+** (flet:46909): WARNING **: 15:15:15.470: Attempted to set message handler on an FlBinaryMessenger without an engine
+
+** (flet:46909): WARNING **: 15:15:15.470: Attempted to set message handler on an FlBinaryMessenger without an engine
+
+(flet:46909): GLib-GObject-CRITICAL **: 15:15:15.475: invalid (NULL) pointer instance
+
+(flet:46909): GLib-GObject-CRITICAL **: 15:15:15.475: g_signal_handler_disconnect: assertion 'G_TYPE_CHECK_INSTANCE (instance)' failed
+GUI closed.
+Reloading configuration...
+[WORKER] Process exited. Resetting state.
+Spawning worker...
+Spawning overlay...
+Hotkey Listener Started: <ctrl>+<space> (Mode: toggle)
+--- STT Daemon (AppIndicator) ---
+[WORKER] 15:15:16 - [WORKER] Initial Memory Usage: 73.04 MB
+[WORKER] 15:15:16 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
+[WORKER] 15:15:16 - [WORKER] Model timeout config: 0
+[WORKER] 15:15:16 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] [STATUS] READY
+[WORKER] 15:15:16 - [WORKER] Interactive Loop Started
+[WORKER] 15:20:16 - [WORKER] Timeout (300s). Exiting.
+[WORKER] Process exited. Resetting state.
 Reloading configuration...
 Spawning worker...
 Spawning overlay...
 Hotkey Listener Started: <ctrl>+<space> (Mode: toggle)
 --- STT Daemon (AppIndicator) ---
-[WORKER] 14:17:27 - [WORKER] Initial Memory Usage: 73.36 MB
-[WORKER] 14:17:27 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:17:27 - [WORKER] Model timeout config: 0
-[WORKER] 14:17:27 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
+[WORKER] 15:24:20 - [WORKER] Initial Memory Usage: 73.54 MB
+[WORKER] 15:24:20 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
+[WORKER] 15:24:20 - [WORKER] Model timeout config: 0
+[WORKER] 15:24:20 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
 [WORKER] [STATUS] READY
-[WORKER] 14:17:27 - [WORKER] Interactive Loop Started
+[WORKER] 15:24:20 - [WORKER] Interactive Loop Started
 Hotkey: START (Toggle)
 [WORKER] [STATUS] REC
-[WORKER] 14:17:33 - [WORKER] Memory Usage [Before Load]: RSS=47.82 MB, Peak=73.36 MB
-[WORKER] 14:17:33 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
+[WORKER] 15:24:23 - [WORKER] Device 4 requires 2ch, recording in stereo
 [WORKER] ACK:START
-[WORKER] 14:17:33 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:17:33 - [WORKER] Audio status: input overflow
-[WORKER] 14:17:36 - [WORKER] Model loaded successfully.
-[WORKER] 14:17:36 - [WORKER] Memory Usage [After Load]: RSS=608.26 MB, Peak=883.46 MB
-[WORKER] 14:17:36 - [WORKER] Audio status: input overflow
+[WORKER] 15:24:23 - [WORKER] Recording STARTED (device=4, rate=44100Hz, channels=2)
 Hotkey: STOP (Toggle)
-[WORKER] 14:17:36 - [WORKER] Recording STOPPED
-[WORKER] 14:17:37 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:17:37 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] 14:17:37 - [WORKER] Processing audio with duration 00:02.858
-[WORKER] ACK:STOP
-[WORKER] 14:17:37 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:17:37 - [WORKER] Transcribed (Local, 0.49s): これならどれぐらいのスピードで動くんだろうか。
-[WORKER] 14:17:37 - [WORKER] Memory Usage [Before Unload]: RSS=1129.72 MB, Peak=1128.69 MB
-[WORKER] 14:17:37 - [WORKER] Unloading model contents...
-[WORKER] 14:17:37 - [WORKER] Memory Usage [After Unload]: RSS=1098.28 MB, Peak=1128.69 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:17:37 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:17:39 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:17:39 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:17:39 - [WORKER] Model timeout config: 0
-[WORKER] 14:17:39 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:17:39 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:17:39 - [WORKER] Memory Usage [Before Load]: RSS=47.75 MB, Peak=73.98 MB
-[WORKER] 14:17:39 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:17:39 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:17:40 - [WORKER] Audio status: input overflow
-[WORKER] 14:17:42 - [WORKER] Model loaded successfully.
-[WORKER] 14:17:42 - [WORKER] Memory Usage [After Load]: RSS=608.06 MB, Peak=883.10 MB
-[WORKER] 14:17:42 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-Hotkey: STOP (Toggle)
-[WORKER] 14:17:46 - [WORKER] Recording STOPPED
-[WORKER] 14:17:46 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:17:46 - [WORKER] Enqueued transcription task.
+[WORKER] 15:24:25 - [WORKER] Recording STOPPED
+[WORKER] 15:24:25 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
+[WORKER] 15:24:25 - [WORKER] Enqueued transcription task.
 [WORKER] [STATUS] READY
 [WORKER] ACK:STOP
-[WORKER] 14:17:46 - [WORKER] Processing audio with duration 00:06.167
-[WORKER] 14:17:46 - [WORKER] VAD filter removed 00:02.727 of audio
-[WORKER] 14:17:47 - [WORKER] Transcribed (Local, 0.52s): いや、これだったら、もうローカル読み込みで言ったくじゃないですか。
-[WORKER] 14:17:47 - [WORKER] Memory Usage [Before Unload]: RSS=1138.58 MB, Peak=1137.53 MB
-[WORKER] 14:17:47 - [WORKER] Unloading model contents...
-[WORKER] 14:17:47 - [WORKER] Memory Usage [After Unload]: RSS=1107.14 MB, Peak=1137.53 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:17:47 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:17:48 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:17:48 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:17:48 - [WORKER] Model timeout config: 0
-[WORKER] 14:17:48 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:17:48 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 14:17:48 - [WORKER] Memory Usage [Before Load]: RSS=47.78 MB, Peak=73.98 MB
-[WORKER] 14:17:48 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:17:48 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:17:48 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-[WORKER] 14:17:51 - [WORKER] Model loaded successfully.
-[WORKER] 14:17:51 - [WORKER] Memory Usage [After Load]: RSS=607.96 MB, Peak=883.11 MB
-[WORKER] 14:17:51 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:17:56 - [WORKER] Recording STOPPED
-[WORKER] 14:17:56 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:17:56 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:17:56 - [WORKER] Processing audio with duration 00:07.168
-[WORKER] 14:17:56 - [WORKER] VAD filter removed 00:04.496 of audio
-[WORKER] 14:17:57 - [WORKER] Transcribed (Local, 0.49s): いやー、これいったくっすね。
-[WORKER] 14:17:57 - [WORKER] Memory Usage [Before Unload]: RSS=1151.61 MB, Peak=1150.57 MB
-[WORKER] 14:17:57 - [WORKER] Unloading model contents...
-[WORKER] 14:17:57 - [WORKER] Memory Usage [After Unload]: RSS=1120.17 MB, Peak=1150.57 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:17:57 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:17:58 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:17:58 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:17:58 - [WORKER] Model timeout config: 0
-[WORKER] 14:17:58 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:17:58 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 14:17:58 - [WORKER] Memory Usage [Before Load]: RSS=47.68 MB, Peak=73.98 MB
-[WORKER] 14:17:58 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:17:58 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:17:58 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-Hotkey: STOP (Toggle)
-[WORKER] 14:17:59 - [WORKER] Recording STOPPED
-[WORKER] 14:18:00 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:00 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:18:00 - [WORKER] Waiting for model to load...
-[WORKER] 14:18:01 - [WORKER] Model loaded successfully.
-[WORKER] 14:18:01 - [WORKER] Memory Usage [After Load]: RSS=666.51 MB, Peak=941.97 MB
-[WORKER] 14:18:01 - [WORKER] Processing audio with duration 00:00.776
-[WORKER] 14:18:01 - [WORKER] VAD filter removed 00:00.776 of audio
-[WORKER] 14:18:01 - [WORKER] Transcribed (Local, 0.04s):
-[WORKER] 14:18:01 - [WORKER] Memory Usage [Before Unload]: RSS=690.92 MB, Peak=941.97 MB
-[WORKER] 14:18:01 - [WORKER] Unloading model contents...
-[WORKER] 14:18:01 - [WORKER] Memory Usage [After Unload]: RSS=659.57 MB, Peak=941.97 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:18:01 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+[WORKER] [92m15:24:27 - LiteLLM:INFO[0m: utils.py:1629 - Wrapper: Completed Call, calling success_handler
+[WORKER] 15:24:27 - [WORKER] Wrapper: Completed Call, calling success_handler
+[WORKER] 15:24:28 - [WORKER] Transcribed (Online/groq, 0.63s): これでちゃんと動くわけ?
 Hotkey: START (Toggle)
 [WORKER] [STATUS] REC
-[WORKER] 14:18:02 - [WORKER] Memory Usage [Before Load]: RSS=659.58 MB, Peak=941.97 MB
-[WORKER] 14:18:02 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
+[WORKER] 15:24:30 - [WORKER] Device 4 requires 2ch, recording in stereo
 [WORKER] ACK:START
-[WORKER] 14:18:02 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
+[WORKER] 15:24:30 - [WORKER] Recording STARTED (device=4, rate=44100Hz, channels=2)
 Hotkey: STOP (Toggle)
-Spawning worker...
-[WORKER] 14:18:05 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:18:05 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:18:05 - [WORKER] Model timeout config: 0
-[WORKER] 14:18:05 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:18:05 - [WORKER] Interactive Loop Started
-[WORKER] ACK:STOP
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] 14:18:11 - [WORKER] Memory Usage [Before Load]: RSS=47.71 MB, Peak=73.98 MB
-[WORKER] 14:18:11 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:18:11 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:18:11 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:13 - [WORKER] Recording STOPPED
-[WORKER] 14:18:13 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:13 - [WORKER] Enqueued transcription task.
+[WORKER] 15:24:32 - [WORKER] Recording STOPPED
+[WORKER] 15:24:32 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
+[WORKER] 15:24:32 - [WORKER] Enqueued transcription task.
 [WORKER] [STATUS] READY
 [WORKER] ACK:STOP
-[WORKER] 14:18:13 - [WORKER] Waiting for model to load...
-[WORKER] 14:18:14 - [WORKER] Model loaded successfully.
-[WORKER] 14:18:14 - [WORKER] Memory Usage [After Load]: RSS=665.30 MB, Peak=940.92 MB
-[WORKER] 14:18:14 - [WORKER] Processing audio with duration 00:01.577
-[WORKER] 14:18:14 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:18:14 - [WORKER] Transcribed (Local, 0.44s): これいったくっすね。
-[WORKER] 14:18:14 - [WORKER] Memory Usage [Before Unload]: RSS=1131.48 MB, Peak=1130.36 MB
-[WORKER] 14:18:14 - [WORKER] Unloading model contents...
-[WORKER] 14:18:14 - [WORKER] Memory Usage [After Unload]: RSS=1100.04 MB, Peak=1130.36 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:18:14 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:18:18 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:18:18 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:18:18 - [WORKER] Model timeout config: 0
-[WORKER] 14:18:18 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:18:18 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 14:18:18 - [WORKER] Memory Usage [Before Load]: RSS=47.70 MB, Peak=73.98 MB
-[WORKER] 14:18:18 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:18:18 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:18:19 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-[WORKER] 14:18:21 - [WORKER] Model loaded successfully.
-[WORKER] 14:18:21 - [WORKER] Memory Usage [After Load]: RSS=608.13 MB, Peak=883.10 MB
-[WORKER] 14:18:21 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:24 - [WORKER] Recording STOPPED
-[WORKER] 14:18:25 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:25 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:18:25 - [WORKER] Processing audio with duration 00:05.654
-[WORKER] 14:18:25 - [WORKER] VAD filter removed 00:03.846 of audio
-[WORKER] 14:18:25 - [WORKER] Transcribed (Local, 0.45s): これいったくですね。
-[WORKER] 14:18:25 - [WORKER] Memory Usage [Before Unload]: RSS=1144.34 MB, Peak=1142.86 MB
-[WORKER] 14:18:25 - [WORKER] Unloading model contents...
-[WORKER] 14:18:25 - [WORKER] Memory Usage [After Unload]: RSS=1112.89 MB, Peak=1142.86 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:18:25 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Reloading configuration...
-Spawning worker...
-Spawning overlay...
-Hotkey Listener Started: <ctrl>+<space> (Mode: toggle)
---- STT Daemon (AppIndicator) ---
-[WORKER] 14:18:41 - [WORKER] Initial Memory Usage: 73.98 MB
-[WORKER] 14:18:41 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:18:41 - [WORKER] Model timeout config: 70
-[WORKER] 14:18:41 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:18:41 - [WORKER] Interactive Loop Started
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] 14:18:45 - [WORKER] Memory Usage [Before Load]: RSS=47.58 MB, Peak=73.98 MB
-[WORKER] 14:18:45 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:18:45 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:18:45 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:47 - [WORKER] Recording STOPPED
-[WORKER] 14:18:47 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:47 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:18:47 - [WORKER] Waiting for model to load...
-[WORKER] 14:18:48 - [WORKER] Model loaded successfully.
-[WORKER] 14:18:48 - [WORKER] Memory Usage [After Load]: RSS=668.71 MB, Peak=944.27 MB
-[WORKER] 14:18:48 - [WORKER] Processing audio with duration 00:01.299
-[WORKER] 14:18:48 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:18:48 - [WORKER] Transcribed (Local, 0.46s): これいったくですね。
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:18:49 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:51 - [WORKER] Recording STOPPED
-[WORKER] 14:18:51 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:51 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:18:51 - [WORKER] Processing audio with duration 00:01.655
-[WORKER] 14:18:51 - [WORKER] VAD filter removed 00:00.048 of audio
-[WORKER] 14:18:51 - [WORKER] Transcribed (Local, 0.13s): これ一択ですね。
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:18:52 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:53 - [WORKER] Recording STOPPED
-[WORKER] 14:18:53 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:53 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] 14:18:53 - [WORKER] Processing audio with duration 00:01.551
-[WORKER] ACK:STOP
-[WORKER] 14:18:53 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:18:54 - [WORKER] Transcribed (Local, 0.13s): これ一択ですね。
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:18:54 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-Hotkey: STOP (Toggle)
-[WORKER] 14:18:56 - [WORKER] Recording STOPPED
-[WORKER] 14:18:56 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:18:56 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:18:56 - [WORKER] Processing audio with duration 00:01.455
-[WORKER] 14:18:56 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:18:56 - [WORKER] Transcribed (Local, 0.12s): これいったくですね。
-Reloading configuration...
-Spawning worker...
-Spawning overlay...
-Hotkey Listener Started: <ctrl>+<space> (Mode: toggle)
---- STT Daemon (AppIndicator) ---
-[WORKER] 14:19:25 - [WORKER] Initial Memory Usage: 74.61 MB
-[WORKER] 14:19:25 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:25 - [WORKER] Model timeout config: 0
-[WORKER] 14:19:25 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:19:25 - [WORKER] Interactive Loop Started
-Hotkey: START (Toggle)
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:19:34 - [WORKER] Memory Usage [Before Load]: RSS=47.62 MB, Peak=74.61 MB
-[WORKER] 14:19:34 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:34 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:19:35 - [WORKER] Audio status: input overflow
-[WORKER] 14:19:37 - [WORKER] Model loaded successfully.
-[WORKER] 14:19:37 - [WORKER] Memory Usage [After Load]: RSS=607.97 MB, Peak=882.73 MB
-[WORKER] 14:19:37 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:19:39 - [WORKER] Recording STOPPED
-[WORKER] 14:19:39 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:19:39 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:19:39 - [WORKER] Processing audio with duration 00:04.034
-[WORKER] 14:19:39 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:19:40 - [WORKER] Transcribed (Local, 0.50s): SSDの起動の時はあんまり意味がないんだけど
-[WORKER] 14:19:40 - [WORKER] Memory Usage [Before Unload]: RSS=1129.96 MB, Peak=1128.40 MB
-[WORKER] 14:19:40 - [WORKER] Unloading model contents...
-[WORKER] 14:19:40 - [WORKER] Memory Usage [After Unload]: RSS=1098.52 MB, Peak=1128.40 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:19:40 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:19:41 - [WORKER] Initial Memory Usage: 75.36 MB
-[WORKER] 14:19:41 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:41 - [WORKER] Model timeout config: 0
-[WORKER] 14:19:41 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:19:41 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:19:41 - [WORKER] Memory Usage [Before Load]: RSS=47.77 MB, Peak=75.36 MB
-[WORKER] 14:19:41 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:41 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:19:41 - [WORKER] Audio status: input overflow
-[WORKER] 14:19:44 - [WORKER] Model loaded successfully.
-[WORKER] 14:19:44 - [WORKER] Memory Usage [After Load]: RSS=608.17 MB, Peak=883.15 MB
-[WORKER] 14:19:44 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-Hotkey: STOP (Toggle)
-[WORKER] 14:19:46 - [WORKER] Recording STOPPED
-[WORKER] 14:19:47 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:19:47 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:19:47 - [WORKER] Processing audio with duration 00:05.130
-[WORKER] 14:19:47 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:19:47 - [WORKER] Transcribed (Local, 0.52s): そういう時に限ってなんだか良くないことが起きるんだよね。
-[WORKER] 14:19:48 - [WORKER] Memory Usage [Before Unload]: RSS=1138.30 MB, Peak=1137.21 MB
-[WORKER] 14:19:48 - [WORKER] Unloading model contents...
-[WORKER] 14:19:48 - [WORKER] Memory Usage [After Unload]: RSS=1106.86 MB, Peak=1137.21 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:19:48 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:19:49 - [WORKER] Initial Memory Usage: 75.36 MB
-[WORKER] 14:19:49 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:49 - [WORKER] Model timeout config: 0
-[WORKER] 14:19:49 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:19:49 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] ACK:START
-[WORKER] 14:19:49 - [WORKER] Memory Usage [Before Load]: RSS=47.70 MB, Peak=75.36 MB
-[WORKER] 14:19:49 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:49 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:19:49 - [WORKER] Audio status: input overflow
-[WORKER] 14:19:52 - [WORKER] Model loaded successfully.
-[WORKER] 14:19:52 - [WORKER] Memory Usage [After Load]: RSS=608.07 MB, Peak=883.08 MB
-[WORKER] 14:19:52 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-Hotkey: STOP (Toggle)
-[WORKER] 14:19:54 - [WORKER] Recording STOPPED
-[WORKER] 14:19:54 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:19:54 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:19:54 - [WORKER] Processing audio with duration 00:04.269
-[WORKER] 14:19:54 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:19:54 - [WORKER] Transcribed (Local, 0.48s): PSDの起動の時はあんまり必要ないんだけど
-[WORKER] 14:19:55 - [WORKER] Memory Usage [Before Unload]: RSS=1142.73 MB, Peak=1141.73 MB
-[WORKER] 14:19:55 - [WORKER] Unloading model contents...
-[WORKER] 14:19:55 - [WORKER] Memory Usage [After Unload]: RSS=1111.29 MB, Peak=1141.73 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:19:55 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:19:59 - [WORKER] Initial Memory Usage: 75.48 MB
-[WORKER] 14:19:59 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:19:59 - [WORKER] Model timeout config: 0
-[WORKER] 14:19:59 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:19:59 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 14:19:59 - [WORKER] Memory Usage [Before Load]: RSS=47.79 MB, Peak=75.48 MB
-[WORKER] 14:19:59 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:19:59 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:19:59 - [WORKER] Audio status: input overflow
-[WORKER] 14:20:02 - [WORKER] Model loaded successfully.
-[WORKER] 14:20:02 - [WORKER] Memory Usage [After Load]: RSS=608.04 MB, Peak=883.20 MB
-[WORKER] 14:20:02 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-Hotkey: STOP (Toggle)
-[WORKER] 14:20:03 - [WORKER] Recording STOPPED
-[WORKER] 14:20:03 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:20:03 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:20:03 - [WORKER] Processing audio with duration 00:03.877
-[WORKER] 14:20:03 - [WORKER] VAD filter removed 00:00.000 of audio
-[WORKER] 14:20:04 - [WORKER] Transcribed (Local, 0.51s): モデルのことがよくわかんないっす。
-[WORKER] 14:20:04 - [WORKER] Memory Usage [Before Unload]: RSS=1133.31 MB, Peak=1132.15 MB
-[WORKER] 14:20:04 - [WORKER] Unloading model contents...
-[WORKER] 14:20:04 - [WORKER] Memory Usage [After Unload]: RSS=1101.87 MB, Peak=1132.15 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:20:04 - [WORKER] Exiting worker process to ensure complete memory cleanup.
-Hotkey: START (Toggle)
-Spawning worker...
-[WORKER] 14:20:10 - [WORKER] Initial Memory Usage: 75.61 MB
-[WORKER] 14:20:10 - [WORKER] Using local model from absolute path: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] 14:20:10 - [WORKER] Model timeout config: 0
-[WORKER] 14:20:10 - [WORKER] On-demand/Hybrid mode: Model will be loaded upon recording.
-[WORKER] [STATUS] READY
-[WORKER] 14:20:10 - [WORKER] Interactive Loop Started
-[WORKER] [STATUS] REC
-[WORKER] 14:20:10 - [WORKER] Memory Usage [Before Load]: RSS=47.74 MB, Peak=75.61 MB
-[WORKER] 14:20:10 - [WORKER] Loading model: /home/heppo/ai_tools/speech_to_text/models/faster-whisper-small
-[WORKER] ACK:START
-[WORKER] 14:20:10 - [WORKER] Recording STARTED (device=3, rate=44100Hz)
-[WORKER] 14:20:10 - [WORKER] Audio status: input overflow
-[WORKER] 14:20:11 - [WORKER] Audio status: input overflow
-Hotkey: START (Toggle)
-[WORKER] ACK:START
-[WORKER] 14:20:13 - [WORKER] Model loaded successfully.
-[WORKER] 14:20:13 - [WORKER] Memory Usage [After Load]: RSS=608.12 MB, Peak=883.36 MB
-[WORKER] 14:20:13 - [WORKER] Audio status: input overflow
-Hotkey: STOP (Toggle)
-[WORKER] 14:20:14 - [WORKER] Recording STOPPED
-[WORKER] 14:20:14 - [WORKER] Resampled audio: 44100Hz -> 16000Hz
-[WORKER] 14:20:14 - [WORKER] Enqueued transcription task.
-[WORKER] [STATUS] READY
-[WORKER] ACK:STOP
-[WORKER] 14:20:14 - [WORKER] Processing audio with duration 00:03.233
-[WORKER] 14:20:14 - [WORKER] VAD filter removed 00:00.048 of audio
-[WORKER] 14:20:14 - [WORKER] Transcribed (Local, 0.46s): 廃棄の時ってどうなの?
-[WORKER] 14:20:15 - [WORKER] Memory Usage [Before Unload]: RSS=1135.48 MB, Peak=1134.34 MB
-[WORKER] 14:20:15 - [WORKER] Unloading model contents...
-[WORKER] 14:20:15 - [WORKER] Memory Usage [After Unload]: RSS=1104.04 MB, Peak=1134.34 MB
-[WORKER] [STATUS] UNLOADED
-[WORKER] 14:20:15 - [WORKER] Exiting worker process to ensure complete memory cleanup.
+[WORKER] [92m15:24:32 - LiteLLM:INFO[0m: utils.py:1629 - Wrapper: Completed Call, calling success_handler
+[WORKER] 15:24:32 - [WORKER] Wrapper: Completed Call, calling success_handler
+[WORKER] 15:24:32 - [WORKER] Transcribed (Online/groq, 0.32s): これでちゃんと動くわけ。

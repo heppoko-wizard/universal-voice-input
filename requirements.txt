@@ -8,3 +8,5 @@ python-dotenv
 faster-whisper
 pystray
 Pillow
+litellm
+flet

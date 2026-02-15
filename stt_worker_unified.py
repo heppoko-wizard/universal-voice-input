@@ -417,40 +417,61 @@ class UnifiedSTTWorker:
                 logger.error("Model is None.")
                 
         else:
-            # オンラインAPI（Groq）で処理
+            # オンラインAPI（LiteLLM経由マルチプロバイダ）で処理
             try:
                 import io
                 import wave
-                from groq import Groq
+                from litellm import transcription as litellm_transcription
                 
                 wav_buffer = io.BytesIO()
                 with wave.open(wav_buffer, 'wb') as wav_file:
                     wav_file.setnchannels(CHANNELS)
                     wav_file.setsampwidth(2)
-                    wav_file.setframerate(INFERENCE_SAMPLE_RATE)  # リサンプリング済みの16kHz
+                    wav_file.setframerate(INFERENCE_SAMPLE_RATE)
                     audio_int16 = (audio_np * 32767).astype(np.int16)
                     wav_file.writeframes(audio_int16.tobytes())
                 
                 wav_buffer.seek(0)
                 wav_buffer.name = "audio.wav"
                 
-                api_key = config.get("api_keys", {}).get("groq", "")
+                # プロバイダ設定の読み取り
+                provider_name = config.get("online_provider", "groq")
+                providers = config.get("online_providers", {})
+                provider_cfg = providers.get(provider_name, {})
+                
+                # プロバイダ設定からキー・モデル・エンドポイントを取得
+                api_key = provider_cfg.get("api_key", "")
+                model_id = provider_cfg.get("model", "")
+                api_base = provider_cfg.get("api_base")  # カスタムエンドポイント（任意）
+                
+                # 後方互換: 旧config形式へのフォールバック
                 if not api_key:
-                    logger.error("Groq API key not found")
+                    api_key = config.get("api_keys", {}).get(provider_name, "")
+                if not model_id:
+                    old_model = config.get("api_models", {}).get(provider_name, "whisper-large-v3-turbo")
+                    model_id = f"{provider_name}/{old_model}"
+                
+                if not api_key:
+                    logger.error(f"API key not found for provider: {provider_name}")
                     return
                 
-                client = Groq(api_key=api_key)
-                model_id = config.get("api_models", {}).get("groq", "whisper-large-v3-turbo")
+                # LiteLLM呼び出し
+                kwargs = {
+                    "model": model_id,
+                    "file": wav_buffer,
+                    "api_key": api_key,
+                }
+                if lang:
+                    kwargs["language"] = lang
+                if initial_prompt:
+                    kwargs["prompt"] = initial_prompt
+                if api_base:
+                    kwargs["api_base"] = api_base
                 
                 start_time = time.time()
-                transcription = client.audio.transcriptions.create(
-                    file=wav_buffer,
-                    model=model_id,
-                    language=lang,
-                    prompt=initial_prompt if initial_prompt else None
-                )
-                text = transcription.text.strip()
-                logger.info(f"Transcribed (Online, {time.time() - start_time:.2f}s): {text}")
+                response = litellm_transcription(**kwargs)
+                text = response.text.strip()
+                logger.info(f"Transcribed (Online/{provider_name}, {time.time() - start_time:.2f}s): {text}")
                 
                 if text:
                     platform_utils.type_text(text)

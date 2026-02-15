@@ -21,8 +21,150 @@ def main(page: ft.Page):
 
     # --- UI Elements ---
     
-    # API Keys
-    api_groq = ft.TextField(label=t("groq_key"), password=True, can_reveal_password=True, value=config["api_keys"].get("groq", ""))
+    # Online Provider Settings
+    # LiteLLMの内部データベースからSTT対応モデルを動的取得
+    try:
+        import litellm as _litellm
+        _all_models = _litellm.model_cost
+        _stt_by_provider = {}
+        for _m, _info in _all_models.items():
+            if _info.get("mode") == "audio_transcription":
+                _prov = _info.get("litellm_provider", "unknown")
+                if _prov.startswith("one of"):
+                    continue  # ドキュメント用サンプルを除外
+                if _prov not in _stt_by_provider:
+                    _stt_by_provider[_prov] = []
+                _stt_by_provider[_prov].append(_m)
+        # プロバイダごとにモデルをソート
+        for _p in _stt_by_provider:
+            _stt_by_provider[_p].sort()
+    except Exception as _e:
+        print(f"Failed to load LiteLLM model list: {_e}")
+        _stt_by_provider = {
+            "groq": ["groq/whisper-large-v3-turbo"],
+            "openai": ["whisper-1"],
+        }
+    
+    # model_costに未登録だがLiteLLMで実際に使えるプロバイダを手動追加
+    # (Geminiはchatモードで音声入力を処理するためaudio_transcriptionとして登録されていない)
+    _manual_providers = {
+        "gemini": ["gemini/gemini-2.0-flash", "gemini/gemini-2.5-flash"],
+    }
+    for _mp, _models in _manual_providers.items():
+        if _mp not in _stt_by_provider:
+            _stt_by_provider[_mp] = _models
+        else:
+            for _m in _models:
+                if _m not in _stt_by_provider[_mp]:
+                    _stt_by_provider[_mp].append(_m)
+            _stt_by_provider[_mp].sort()
+    
+    # プロバイダ表示名マッピング
+    PROVIDER_LABELS = {
+        "groq": "Groq",
+        "openai": "OpenAI",
+        "gemini": "Google Gemini",
+        "azure": "Azure OpenAI",
+        "deepgram": "Deepgram",
+        "fireworks_ai": "Fireworks AI",
+        "elevenlabs": "ElevenLabs",
+        "ovhcloud": "OVHcloud",
+        "assemblyai": "AssemblyAI",
+        "watsonx": "IBM watsonx",
+    }
+    
+    online_providers = config.get("online_providers", {})
+    current_provider = config.get("online_provider", "groq")
+    
+    # プロバイダドロップダウン（動的に検出されたプロバイダ＋カスタム）
+    provider_options = []
+    for _prov_key in sorted(_stt_by_provider.keys()):
+        _label = PROVIDER_LABELS.get(_prov_key, _prov_key)
+        _count = len(_stt_by_provider[_prov_key])
+        provider_options.append(ft.dropdown.Option(key=_prov_key, text=f"{_label} ({_count})"))
+    provider_options.append(ft.dropdown.Option(key="custom", text=t("custom_endpoint")))
+    
+    provider_cfg = online_providers.get(current_provider, {})
+    
+    # UIウィジェットを先に作成
+    txt_api_key = ft.TextField(
+        label=t("api_key_label"),
+        password=True, can_reveal_password=True,
+        value=provider_cfg.get("api_key", ""),
+    )
+    
+    # モデルドロップダウン
+    def _build_model_options(prov):
+        models = _stt_by_provider.get(prov, [])
+        return [ft.dropdown.Option(key=m, text=m) for m in models]
+    
+    saved_model = provider_cfg.get("model", "")
+    current_models = _stt_by_provider.get(current_provider, [])
+    
+    dd_online_model = ft.Dropdown(
+        label=t("online_model_label"),
+        options=_build_model_options(current_provider),
+        value=saved_model if saved_model in current_models else (current_models[0] if current_models else None),
+        visible=(current_provider != "custom"),
+    )
+    
+    txt_custom_model_name = ft.TextField(
+        label=t("online_model_label"),
+        value=provider_cfg.get("model", "") if current_provider == "custom" else "",
+        hint_text="openai/whisper-1",
+        visible=(current_provider == "custom"),
+    )
+    
+    txt_api_base = ft.TextField(
+        label=t("api_base_label"),
+        value=provider_cfg.get("api_base", ""),
+        hint_text="http://localhost:8080/v1",
+        visible=(current_provider == "custom"),
+    )
+    
+    # 現在選択中のプロバイダを追跡
+    _current_prov = [current_provider]
+    
+    # イベントハンドラ定義
+    def on_provider_change(e):
+        # 切り替え前: 現在の入力内容をメモリ上に保存
+        old_prov = _current_prov[0]
+        old_entry = {"api_key": txt_api_key.value}
+        if old_prov == "custom":
+            old_entry["model"] = txt_custom_model_name.value
+            old_entry["api_base"] = txt_api_base.value
+        else:
+            old_entry["model"] = dd_online_model.value or ""
+        online_providers[old_prov] = old_entry
+        
+        # 切り替え後
+        prov = e.control.value
+        _current_prov[0] = prov
+        cfg = online_providers.get(prov, {})
+        txt_api_key.value = cfg.get("api_key", "")
+        
+        is_custom = (prov == "custom")
+        dd_online_model.visible = not is_custom
+        txt_custom_model_name.visible = is_custom
+        txt_api_base.visible = is_custom
+        
+        if is_custom:
+            txt_custom_model_name.value = cfg.get("model", "")
+            txt_api_base.value = cfg.get("api_base", "")
+        else:
+            models = _stt_by_provider.get(prov, [])
+            dd_online_model.options = _build_model_options(prov)
+            saved = cfg.get("model", "")
+            dd_online_model.value = saved if saved in models else (models[0] if models else None)
+        page.update()
+    
+    # on_selectをコンストラクタに直接渡したDropdownを作成 (Flet 0.80+: on_change→on_select)
+    dd_provider = ft.Dropdown(
+        label=t("online_provider"),
+        options=provider_options,
+        value=current_provider if any(o.key == current_provider for o in provider_options) else "groq",
+        on_select=on_provider_change,
+    )
     
     # Local Inference settings
     # Model Mode: online / local / custom
@@ -207,7 +349,23 @@ def main(page: ft.Page):
         import subprocess
         
         try:
-            config["api_keys"]["groq"] = api_groq.value
+            # オンラインプロバイダ設定の保存
+            prov = dd_provider.value
+            config["online_provider"] = prov
+            if "online_providers" not in config:
+                config["online_providers"] = {}
+            config["online_providers"][prov] = {
+                "api_key": txt_api_key.value,
+                "model": txt_custom_model_name.value if prov == "custom" else dd_online_model.value,
+            }
+            if prov == "custom" and txt_api_base.value.strip():
+                config["online_providers"][prov]["api_base"] = txt_api_base.value.strip()
+            
+            # 後方互換: 旧api_keysも更新
+            if "api_keys" not in config:
+                config["api_keys"] = {}
+            config["api_keys"][prov] = txt_api_key.value
+            
             config["ui_language"] = dd_lang.value
             config["hotkey_mode"] = dd_hotkey_mode.value
             config["add_punctuation"] = cb_punctuation.value
@@ -400,10 +558,14 @@ def main(page: ft.Page):
 
     # 3. Inference Settings Group
     
-    # Groq API Field (Only visible when online mode)
-    container_groq = ft.Column([
+    # Online Provider Settings (Only visible when online mode)
+    container_online = ft.Column([
         ft.Container(height=5),
-        api_groq
+        dd_provider,
+        txt_api_key,
+        dd_online_model,
+        txt_custom_model_name,
+        txt_api_base,
     ], visible=(raw_mode == "online"))
 
     # Local Model Settings Content (Only visible when local mode)
@@ -454,7 +616,7 @@ def main(page: ft.Page):
 
     def on_mode_change(e):
         mode = rg_mode.value
-        container_groq.visible = (mode == "online")
+        container_online.visible = (mode == "online")
         card_local_settings.visible = (mode == "local")
         card_custom_settings.visible = (mode == "custom")
         page.update()
@@ -468,7 +630,7 @@ def main(page: ft.Page):
                 ft.Text(t("inference_settings"), size=18, weight="bold"),
                 rg_mode,
                 cb_punctuation,
-                container_groq
+                container_online
             ])
         )
     )
