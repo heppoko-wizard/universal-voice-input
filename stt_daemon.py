@@ -200,8 +200,8 @@ class STTDaemonAppIndicator:
         # ホットキー設定
         self.setup_hotkey()
         
-        # 起動時マイクチェック（バックグラウンド）
-        threading.Thread(target=self._startup_mic_check, daemon=True).start()
+        # 起動時マイクチェック（無効化: device_indexを誤って上書きする問題があるため）
+        # threading.Thread(target=self._startup_mic_check, daemon=True).start()
         
         print(f"--- STT Daemon (AppIndicator) ---")
         
