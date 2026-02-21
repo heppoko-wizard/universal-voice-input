@@ -252,6 +252,17 @@ def main(page: ft.Page):
         value=lang,
     )
 
+    # UI表示位置の設定
+    dd_ui_position = ft.Dropdown(
+        label=t("ui_position"),
+        options=[
+            ft.dropdown.Option(key="bottom", text=t("ui_pos_bottom")),
+            ft.dropdown.Option(key="center", text=t("ui_pos_center")),
+            ft.dropdown.Option(key="top", text=t("ui_pos_top")),
+        ],
+        value=config.get("ui_position", "bottom"),
+    )
+
     # Hotkey Mode Selection
     hotkey_mode = config.get("hotkey_mode", "toggle")
     dd_hotkey_mode = ft.Dropdown(
@@ -431,6 +442,7 @@ def main(page: ft.Page):
                 ("speed_factor", t("speed_factor")),
                 ("add_punctuation", t("add_punctuation")),
                 ("auto_start", t("auto_start")),
+                ("ui_position", t("ui_position")),
             ]
             for key, label in check_keys:
                 old_val = original_config.get(key)
@@ -539,6 +551,7 @@ def main(page: ft.Page):
                 ft.Text(t("api_settings"), size=18, weight="bold"),
                 dd_lang,
                 cb_auto_start,
+                dd_ui_position,
             ])
         )
     )

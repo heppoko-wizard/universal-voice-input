@@ -60,6 +60,10 @@ TRANSLATIONS = {
         "online_model_label": "モデル名 (provider/model)",
         "api_base_label": "エンドポイントURL",
         "auto_start": "ログイン時に自動起動",
+        "ui_position": "ステータスUIの表示位置",
+        "ui_pos_bottom": "画面下端（デフォルト）",
+        "ui_pos_center": "画面中央（少し下）",
+        "ui_pos_top": "画面上端",
     },
     "en": {
         "title": "STT Config Editor",
@@ -128,6 +132,10 @@ TRANSLATIONS = {
         "online_model_label": "Model Name (provider/model)",
         "api_base_label": "Endpoint URL",
         "auto_start": "Auto-start on Login",
+        "ui_position": "Status UI Position",
+        "ui_pos_bottom": "Bottom (Default)",
+        "ui_pos_center": "Center",
+        "ui_pos_top": "Top",
     },
     "zh": {
         "title": "STT 配置编辑器",
@@ -196,6 +204,10 @@ TRANSLATIONS = {
         "online_model_label": "模型名 (provider/model)",
         "api_base_label": "端点URL",
         "auto_start": "登录时自动启动",
+        "ui_position": "显示位置 (状态 UI)",
+        "ui_pos_bottom": "底部（默认）",
+        "ui_pos_center": "中间",
+        "ui_pos_top": "顶部",
     }
 }
 

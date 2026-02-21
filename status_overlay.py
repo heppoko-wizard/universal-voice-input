@@ -1,89 +1,146 @@
 #!/usr/bin/env python3
 """
-Status Overlay (Cross-Platform)
-Tkinterを用いて画面の四辺に枠線を描画するオーバーレイ。
-X11非依存でWindows/macOS/Linuxすべてで動作するよう設計。
+Status Overlay (Cross-Platform / Floating Bar)
+Tkinterを用いて画面の上部・中央下・下部にフローティングステータスバーを表示する軽量なGUI。
+録音中の時間カウント、待機状態・処理状態の視覚化を行う。
 """
 import sys
 import threading
 import time
 import tkinter as tk
 import platform
+import json
+import os
 
-class CrossPlatformOverlay:
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(PROJECT_ROOT, "config.json")
+
+def load_ui_position():
+    try:
+        with open(CONFIG_FILE, "r") as f:
+            c = json.load(f)
+            return c.get("ui_position", "bottom")
+    except:
+        return "bottom"
+
+class FloatingOverlay:
     def __init__(self):
         self.root = tk.Tk()
-        self.root.withdraw() # Main window is hidden
-
-        # Get screen dimensions
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
+        self.root.overrideredirect(True) # タイトルバーなし
+        self.root.attributes("-topmost", True) # 常に最前面
         
-        # Border settings
-        padding = 50 if platform.system() == "Darwin" else 0  # Avoid macOS menu bar if 0 padding is problematic
-        self.thickness = 4
-        
-        # OS specific transparency and click-through
-        self.bg_color = "black"
-        self.trans_color = "black"
-        
-        if platform.system() == "Windows":
-            self.root.wm_attributes("-transparentcolor", self.trans_color)
-            self.root.attributes("-alpha", 0.7)
-        elif platform.system() == "Darwin": # macOS
+        # クロスプラットフォームな透過処理とクリック透過対応
+        plat = platform.system()
+        if plat == "Windows":
+            self.root.wm_attributes("-transparentcolor", "black")
+            self.root.config(bg="black")
+            bg_color = "black"
+            # Click-through (WS_EX_TRANSPARENT | WS_EX_LAYERED)
+            import ctypes
+            hwnd = ctypes.windll.user32.GetParent(self.root.winfo_id())
+            style = ctypes.windll.user32.GetWindowLongW(hwnd, -20)
+            ctypes.windll.user32.SetWindowLongW(hwnd, -20, style | 0x80000 | 0x20)
+        elif plat == "Darwin": # macOS
             self.root.wm_attributes("-transparent", True)
-            self.bg_color = 'systemTransparent'
+            self.root.config(bg="systemTransparent")
+            bg_color = "systemTransparent"
         else: # Linux/X11/Wayland
             self.root.wait_visibility(self.root)
-            self.root.attributes("-alpha", 0.7)
+            self.root.attributes("-alpha", 0.8) # 全体に透明度をかけるため背景黒は不可
+            self.root.config(bg="gray10")
+            bg_color = "gray10"
             
-        self.borders = []
+        self.bg_color = bg_color
         
-        # Geometry setup for 4 edges
-        edges = [
-            (0, padding, screen_width, self.thickness), # Top
-            (0, screen_height - self.thickness - padding, screen_width, self.thickness), # Bottom
-            (0, padding, self.thickness, screen_height - (padding*2)), # Left
-            (screen_width - self.thickness, padding, self.thickness, screen_height - (padding*2)) # Right
-        ]
+        # UIウィジェット
+        self.label = tk.Label(
+            self.root, 
+            text="🎙️ 待機中", 
+            font=("Arial", 12, "bold"),
+            fg="white", 
+            bg=self.bg_color,
+            padx=15, 
+            pady=5
+        )
+        self.label.pack()
+
+        # 配置の決定
+        self.root.update_idletasks() # サイズ計算のため一度更新
+        w = self.label.winfo_reqwidth()
+        h = self.label.winfo_reqheight()
         
-        for (x, y, w, h) in edges:
-            top = tk.Toplevel(self.root)
-            top.geometry(f"{w}x{h}+{x}+{y}")
-            top.overrideredirect(True) # No window manager framing
-            top.attributes("-topmost", True) # Always on top
-            top.configure(background=self.bg_color)
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        
+        # configから位置を取得
+        pos = load_ui_position()
+        
+        if pos == "top":
+            x = (sw - w) // 2
+            y = 20 # メニューバーなどを考慮し少し下
+        elif pos == "center":
+            x = (sw - w) // 2
+            y = sh - 300 # 中央より少し下
+        else: # bottom (default)
+            x = (sw - w) // 2
+            y = sh - 80 # タスクバーの上
             
-            # Click-through depending on OS
-            if platform.system() == "Windows":
-                top.wm_attributes("-transparentcolor", self.trans_color)
-                # Windows click-through WS_EX_TRANSPARENT | WS_EX_LAYERED
-                import ctypes
-                hwnd = ctypes.windll.user32.GetParent(top.winfo_id())
-                style = ctypes.windll.user32.GetWindowLongW(hwnd, -20)
-                ctypes.windll.user32.SetWindowLongW(hwnd, -20, style | 0x80000 | 0x20)
-            elif platform.system() == "Darwin":
-                pass # Handled differently, or usually TopLevel empty space passes through
-            else:
-                top.attributes("-alpha", 0.7)
-                
-            top.withdraw() # Hidden initially
-            self.borders.append(top)
+        self.root.geometry(f"{w}x{h}+{x}+{y}")
+        self.root.withdraw() # 初期は非表示
 
         self.running = True
+        self.start_time = 0
+        self.current_state = "READY"
         
         # Start stdin monitor in background
         threading.Thread(target=self._monitor_stdin, daemon=True).start()
+        
+        # タイマー更新ループ
+        self._update_timer()
 
-    def set_color(self, color):
-        """四辺の枠の色を変更し、表示/非表示を切り替える"""
-        if color == "NONE":
-            for b in self.borders:
-                b.withdraw()
+    def set_status(self, state):
+        self.current_state = state
+        if state == "READY":
+            self.root.withdraw()
         else:
-            for b in self.borders:
-                b.configure(background=color)
-                b.deiconify()
+            if state == "REC":
+                self.start_time = time.time()
+                self.label.config(text="🔴 録音中 [00:00]", fg="#ff4444")
+            elif state == "PROC_LOCAL":
+                self.label.config(text="⏳ 処理中... (Local)", fg="#ffff44")
+            elif state == "PROC_ONLINE":
+                self.label.config(text="⏳ 処理中... (Online)", fg="#44eeff")
+            elif state == "ERROR":
+                self.label.config(text="⚠️ エラー発生", fg="red")
+            
+            # 再センタリング
+            self.root.update_idletasks()
+            w = self.label.winfo_reqwidth()
+            sw = self.root.winfo_screenwidth()
+            sh = self.root.winfo_screenheight()
+            pos = load_ui_position()
+
+            if pos == "top":
+                x = (sw - w) // 2
+                y = 20
+            elif pos == "center":
+                x = (sw - w) // 2
+                y = sh - 300
+            else: # bottom
+                x = (sw - w) // 2
+                y = sh - 80
+                
+            self.root.geometry(f"+{x}+{y}")
+            self.root.deiconify()
+
+    def _update_timer(self):
+        if self.running:
+            if self.current_state == "REC":
+                elapsed = int(time.time() - self.start_time)
+                mins, secs = divmod(elapsed, 60)
+                self.label.config(text=f"🔴 録音中 [{mins:02d}:{secs:02d}]")
+            # 1秒（1000ms）ごとに再実行
+            self.root.after(1000, self._update_timer)
 
     def _monitor_stdin(self):
         while self.running:
@@ -95,13 +152,17 @@ class CrossPlatformOverlay:
                 
                 # GUI thread safe call
                 if cmd == "REC":
-                    self.root.after(0, self.set_color, "red")
+                    self.root.after(0, self.set_status, "REC")
                 elif cmd == "PROC_LOCAL":
-                    self.root.after(0, self.set_color, "yellow")
+                    self.root.after(0, self.set_status, "PROC_LOCAL")
                 elif cmd == "PROC_ONLINE":
-                    self.root.after(0, self.set_color, "cyan")
+                    self.root.after(0, self.set_status, "PROC_ONLINE")
                 elif cmd == "READY":
-                    self.root.after(0, self.set_color, "NONE")
+                    self.root.after(0, self.set_status, "READY")
+                elif "ERROR" in cmd:
+                    self.root.after(0, self.set_status, "ERROR")
+                    time.sleep(2) # エラー表示を2秒残してREADYに戻る
+                    self.root.after(0, self.set_status, "READY")
                 elif cmd == "QUIT":
                     self.running = False
                     self.root.after(0, self.root.quit)
@@ -118,5 +179,5 @@ class CrossPlatformOverlay:
             self.root.destroy()
 
 if __name__ == "__main__":
-    app = CrossPlatformOverlay()
+    app = FloatingOverlay()
     app.run()

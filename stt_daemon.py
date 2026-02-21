@@ -238,6 +238,7 @@ class STTDaemon:
         elif status == "MODEL_ERROR":
             self.recording = False
             self.overlay_mgr.send_command("READY")
+            platform_utils.play_sound("error")
             import i18n
             lang = self.config.get("ui_language", "ja")
             self._send_notification(
@@ -248,6 +249,7 @@ class STTDaemon:
         elif status == "DEVICE_ERROR":
             self.recording = False
             self.overlay_mgr.send_command("READY")
+            platform_utils.play_sound("error")
             self._send_notification(
                 "STT - Device Error",
                 "マイクデバイスにアクセスできませんでした。\nUSBを挿し直すか、設定を確認してください。",
@@ -256,6 +258,7 @@ class STTDaemon:
         elif status == "SILENT_ERROR":
             self.recording = False
             self.overlay_mgr.send_command("READY")
+            platform_utils.play_sound("error")
             self._send_notification(
                 "STT - Mic Warning",
                 "マイクが音を拾っていません。\nミュートになっていないか、接続を確認してください。",
@@ -301,10 +304,14 @@ class STTDaemon:
         """Toggle mode の動作"""
         if self.recording:
             logger.info("Hotkey: STOP (Toggle)")
+            # 効果音再生
+            platform_utils.play_sound("stop")
             self.worker_mgr.send_command("STOP")
             self.recording = False
         else:
             logger.info("Hotkey: START (Toggle)")
+            # 効果音再生
+            platform_utils.play_sound("start")
             self.worker_mgr.send_command("START")
             self.recording = True
 
@@ -312,6 +319,7 @@ class STTDaemon:
         """Hold mode の開始動作"""
         if not self.recording:
             logger.info("Hotkey: START (Hold)")
+            platform_utils.play_sound("start")
             self.worker_mgr.send_command("START")
             self.recording = True
 
@@ -319,6 +327,7 @@ class STTDaemon:
         """Hold mode の終了動作"""
         if self.recording:
             logger.info("Hotkey: STOP (Hold)")
+            platform_utils.play_sound("stop")
             self.worker_mgr.send_command("STOP")
             self.recording = False
 
