@@ -12,43 +12,7 @@ def get_platform():
         return "windows"
     return "unknown"
 
-def notify(title, message, replaces_id=None, timeout=3000):
-    plat = get_platform()
-    try:
-        if plat == "linux":
-            # -p: 通知IDを出力する
-            # -t: タイムアウト（ミリ秒）、0 = 消えない
-            cmd = ["notify-send", "-p", "-t", str(timeout)]
-            if replaces_id:
-                cmd.extend(["-r", str(replaces_id)])
-            cmd.extend([title, message])
-            
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            new_id = result.stdout.strip()
-            return new_id if new_id else replaces_id
-        elif plat == "mac":
-            script = f'display notification "{message}" with title "{title}"'
-            subprocess.run(["osascript", "-e", script], stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
-    return replaces_id
 
-def unnotify(notify_id):
-    """通知を強制的に閉じる (Linux用)"""
-    if not notify_id:
-        return
-    plat = get_platform()
-    try:
-        if plat == "linux":
-            # DBusを使用して特定の通知IDを閉じる
-            # uint32を指定して確実にマッチさせる
-            subprocess.run([
-                "dbus-send", "--type=method_call", "--dest=org.freedesktop.Notifications",
-                "/org/freedesktop/Notifications", "org.freedesktop.Notifications.CloseNotification",
-                f"uint32:{notify_id}"
-            ], stderr=subprocess.DEVNULL)
-    except Exception:
-        pass
 
 def play_sound(sound_type="start"):
     plat = get_platform()
@@ -103,8 +67,20 @@ def copy_text(text):
         print(f"Copy failed: {e}")
 
 def paste_text():
-    """Simulate Ctrl+V / Cmd+V."""
+    """Simulate Ctrl+V / Cmd+V using pynput, falling back to OS commands."""
     plat = get_platform()
+    try:
+        from pynput.keyboard import Key, Controller
+        keyboard = Controller()
+        mod_key = Key.cmd if plat == "mac" else Key.ctrl
+        keyboard.press(mod_key)
+        keyboard.press('v')
+        keyboard.release('v')
+        keyboard.release(mod_key)
+        return
+    except Exception as e:
+        print(f"Paste via pynput failed: {e}")
+        
     try:
         if plat == "linux":
             # Use xdotool if available (X11/XWayland)
@@ -119,24 +95,12 @@ def paste_text():
             subprocess.run(["osascript", "-e", script])
             
         elif plat == "windows":
-            import ctypes
-            # Simple Ctrl+V using user32.dll or pynput
-            # Using pynput here is safer if installed
-            from pynput.keyboard import Key, Controller
-            keyboard = Controller()
-            keyboard.press(Key.ctrl)
-            keyboard.press('v')
-            keyboard.release('v')
-            keyboard.release(Key.ctrl)
+            pass
             
     except Exception as e:
-        print(f"Paste failed: {e}")
+        print(f"Paste fallback failed: {e}")
 
-def get_hotkey_map(key_string):
-    """Convert simplified hotkey string to pynput format if needed."""
-    # Currently pynput handles <ctrl>+<shift> etc well on all platforms.
-    # macOS might use <cmd> which maps to Key.cmd
-    return key_string
+
 
 def type_text(text):
     """
