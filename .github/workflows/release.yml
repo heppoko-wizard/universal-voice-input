@@ -16,16 +16,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create Package
+      - name: Create Packages
         run: |
           PROJECT_NAME="open-stt-tool"
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           DIST_DIR="dist"
           mkdir -p $DIST_DIR
           
-          # 共通の配布ファイルリスト
-          # config.json, venv, models などは含めない
-          FILES=(
+          # 共通ファイル
+          COMMON_FILES=(
             "gui.py"
             "stt_daemon.py"
             "stt_worker_unified.py"
@@ -35,15 +34,18 @@ jobs:
             "platform_utils.py"
             "requirements.txt"
             "stt_icon.png"
-            "setup_linux.sh"
-            "setup_macos.sh"
-            "setup_windows.ps1"
             "README.md"
             "LICENSE"
           )
           
-          # ZIPを作成 (全プラットフォーム共通構成)
-          zip -r $DIST_DIR/${PROJECT_NAME}-${TAG_NAME}.zip "${FILES[@]}"
+          # Linux Package
+          zip -r $DIST_DIR/${PROJECT_NAME}-${TAG_NAME}-linux.zip "${COMMON_FILES[@]}" "setup_linux.sh"
+          
+          # macOS Package
+          zip -r $DIST_DIR/${PROJECT_NAME}-${TAG_NAME}-macos.zip "${COMMON_FILES[@]}" "setup_macos.sh"
+          
+          # Windows Package
+          zip -r $DIST_DIR/${PROJECT_NAME}-${TAG_NAME}-windows.zip "${COMMON_FILES[@]}" "setup_windows.ps1"
 
       - name: Release
         uses: softprops/action-gh-release@v2
