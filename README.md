@@ -49,13 +49,17 @@
 
 ## インストール / Installation
 
-最も簡単な方法は、[Releases](https://github.com/your-username/open-stt-tool/releases) ページから最新の ZIP ファイルをダウンロードすることです。
+最も簡単な方法は、[Releases](https://github.com/your-username/open-stt-tool/releases) ページから自分の OS 用の ZIP ファイルをダウンロードすることです。
 
-1. [Releases](https://github.com/your-username/open-stt-tool/releases) から最新の `open-stt-tool-vX.X.X.zip` をダウンロード
+1. [Releases](https://github.com/your-username/open-stt-tool/releases) から最新の ZIP をダウンロード
+   - Windows: `open-stt-tool-vX.X.X-windows.zip`
+   - macOS: `open-stt-tool-vX.X.X-macos.zip`
+   - Linux: `open-stt-tool-vX.X.X-linux.zip`
 2. 任意のフォルダに解凍
-3. フォルダ内の各 OS 向けセットアップスクリプトを実行：
+3. フォルダ内のセットアップスクリプトを実行：
    - **Windows**: `setup_windows.ps1` を右クリックして「PowerShell で実行」
-   - **macOS / Linux**: ターミナルで `bash setup_macos.sh` または `bash setup_linux.sh` を実行
+   - **macOS**: ターミナルで `bash setup_macos.sh` を実行
+   - **Linux**: ターミナルで `bash setup_linux.sh` を実行
 
 ---
 
@@ -169,13 +173,17 @@ A local AI model handles all transcription **on-device**, so no audio ever leave
 
 ## Installation
 
-The easiest way is to download the latest ZIP from the [Releases](https://github.com/your-username/open-stt-tool/releases) page.
+The easiest way is to download the correct ZIP for your OS from the [Releases](https://github.com/your-username/open-stt-tool/releases) page.
 
-1. Download `open-stt-tool-vX.X.X.zip` from [Releases](https://github.com/your-username/open-stt-tool/releases).
+1. Download the ZIP for your OS from [Releases](https://github.com/your-username/open-stt-tool/releases):
+   - Windows: `open-stt-tool-vX.X.X-windows.zip`
+   - macOS: `open-stt-tool-vX.X.X-macos.zip`
+   - Linux: `open-stt-tool-vX.X.X-linux.zip`
 2. Extract the ZIP to any folder.
-3. Run the setup script for your OS:
+3. Run the setup script:
    - **Windows**: Right-click `setup_windows.ps1` and select "Run with PowerShell".
-   - **macOS / Linux**: Run `bash setup_macos.sh` or `bash setup_linux.sh` in your terminal.
+   - **macOS**: Run `bash setup_macos.sh` in your terminal.
+   - **Linux**: Run `bash setup_linux.sh` in your terminal.
 
 ---
 
