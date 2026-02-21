@@ -53,7 +53,7 @@ ICON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stt_icon.p
 class OverlayManager:
     def __init__(self):
         self.process = None
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         
     def ensure_running(self):
         with self.lock:
@@ -100,7 +100,7 @@ class OverlayManager:
 class WorkerManager:
     def __init__(self, status_callback=None):
         self.process = None
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()
         self.status_callback = status_callback
         self.monitor_thread = None
         
