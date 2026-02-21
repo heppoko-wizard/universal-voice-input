@@ -33,7 +33,7 @@ if (Test-Path "requirements.txt") {
     pip install -r requirements.txt
 } else {
     Write-Host "WARNING: requirements.txt not found. Installing base packages..." -ForegroundColor Yellow
-    pip install sounddevice numpy scipy pynput pyperclip flet groq openai python-dotenv faster-whisper litellm
+    pip install sounddevice numpy scipy pynput pyperclip flet groq openai python-dotenv faster-whisper litellm pystray Pillow pywin32
 }
 
 # 4. Create startup shortcut

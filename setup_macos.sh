@@ -35,7 +35,7 @@ if [ -f "requirements.txt" ]; then
     pip install -r requirements.txt
 else
     echo "WARNING: requirements.txt not found. Installing base packages..."
-    pip install sounddevice numpy scipy pynput pyperclip flet groq openai python-dotenv faster-whisper litellm
+    pip install sounddevice numpy scipy pynput pyperclip flet groq openai python-dotenv faster-whisper litellm pystray Pillow
 fi
 
 # 5. Create LaunchAgent for autostart
