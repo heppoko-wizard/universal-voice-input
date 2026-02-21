@@ -1,172 +1,122 @@
 #!/usr/bin/env python3
 """
-Status Overlay (X11 Native)
-python-xlibを使用してX11ウィンドウを直接制御
-Tkinterの環境依存問題を回避するための実装
+Status Overlay (Cross-Platform)
+Tkinterを用いて画面の四辺に枠線を描画するオーバーレイ。
+X11非依存でWindows/macOS/Linuxすべてで動作するよう設計。
 """
 import sys
 import threading
 import time
-from Xlib import X, display, Xutil
+import tkinter as tk
+import platform
 
-# Debug logging
-def log(msg):
-    try:
-        with open("/tmp/overlay_debug.log", "a") as f:
-            f.write(f"{time.strftime('%H:%M:%S')} - {msg}\n")
-    except: pass
-
-class X11BorderWindow:
-    def __init__(self, disp, screen, x, y, w, h):
-        self.disp = disp
-        self.root = screen.root
-        
-        # ウィンドウ作成
-        self.window = self.root.create_window(
-            x, y, w, h, 0,
-            screen.root_depth,
-            X.InputOutput,
-            X.CopyFromParent,
-            background_pixel=screen.black_pixel,
-            override_redirect=True,  # ウィンドウマネージャーの制御を受けない
-            event_mask=X.ExposureMask
-        )
-        
-        # 最前面に設定
-        self.window.change_property(
-            disp.intern_atom('_NET_WM_STATE'),
-            disp.intern_atom('ATOM'), 32,
-            [disp.intern_atom('_NET_WM_STATE_ABOVE')]
-        )
-        
-        # 透過度設定 (70% = 0.7 * 0xFFFFFFFF)
-        opacity = int(0.7 * 0xFFFFFFFF)
-        self.window.change_property(
-            disp.intern_atom('_NET_WM_WINDOW_OPACITY'),
-            disp.intern_atom('CARDINAL'), 32,
-            [opacity]
-        )
-        
-        self.visible = False
-        
-    def set_color(self, color_name):
-        """色を設定"""
-        colormap = self.disp.screen().default_colormap
-        
-        color_map = {
-            'red': colormap.alloc_named_color('red').pixel,
-            'yellow': colormap.alloc_named_color('yellow').pixel,
-            'black': self.disp.screen().black_pixel
-        }
-        
-        pixel = color_map.get(color_name, self.disp.screen().black_pixel)
-        self.window.change_attributes(background_pixel=pixel)
-        self.window.clear_area(0, 0, 0, 0)  # 再描画
-        
-    def show(self):
-        if not self.visible:
-            self.window.map()
-            self.visible = True
-            
-    def hide(self):
-        if self.visible:
-            self.window.unmap()
-            self.visible = False
-
-class StatusOverlay:
+class CrossPlatformOverlay:
     def __init__(self):
-        log("Initializing X11 Overlay...")
+        self.root = tk.Tk()
+        self.root.withdraw() # Main window is hidden
+
+        # Get screen dimensions
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
         
-        self.disp = display.Display()
-        self.screen = self.disp.screen()
+        # Border settings
+        padding = 50 if platform.system() == "Darwin" else 0  # Avoid macOS menu bar if 0 padding is problematic
+        self.thickness = 4
         
-        screen_width = self.screen.width_in_pixels
-        screen_height = self.screen.height_in_pixels
-        log(f"Screen: {screen_width}x{screen_height}")
+        # OS specific transparency and click-through
+        self.bg_color = "black"
+        self.trans_color = "black"
         
-        # 枠のサイズ設定
-        padding = 100
-        size_w = min(1000, screen_width - padding)
-        size_h = min(1000, screen_height - padding)
+        if platform.system() == "Windows":
+            self.root.wm_attributes("-transparentcolor", self.trans_color)
+            self.root.attributes("-alpha", 0.7)
+        elif platform.system() == "Darwin": # macOS
+            self.root.wm_attributes("-transparent", True)
+            self.bg_color = 'systemTransparent'
+        else: # Linux/X11/Wayland
+            self.root.wait_visibility(self.root)
+            self.root.attributes("-alpha", 0.7)
+            
+        self.borders = []
         
-        x = (screen_width - size_w) // 2
-        y = (screen_height - size_h) // 2
-        
-        thickness = 3
-        
-        # 4つのボーダーウィンドウを作成
-        self.borders = [
-            X11BorderWindow(self.disp, self.screen, x, y, size_w, thickness),  # Top
-            X11BorderWindow(self.disp, self.screen, x, y + size_h - thickness, size_w, thickness),  # Bottom
-            X11BorderWindow(self.disp, self.screen, x, y, thickness, size_h),  # Left
-            X11BorderWindow(self.disp, self.screen, x + size_w - thickness, y, thickness, size_h)  # Right
+        # Geometry setup for 4 edges
+        edges = [
+            (0, padding, screen_width, self.thickness), # Top
+            (0, screen_height - self.thickness - padding, screen_width, self.thickness), # Bottom
+            (0, padding, self.thickness, screen_height - (padding*2)), # Left
+            (screen_width - self.thickness, padding, self.thickness, screen_height - (padding*2)) # Right
         ]
         
-        self.disp.flush()
+        for (x, y, w, h) in edges:
+            top = tk.Toplevel(self.root)
+            top.geometry(f"{w}x{h}+{x}+{y}")
+            top.overrideredirect(True) # No window manager framing
+            top.attributes("-topmost", True) # Always on top
+            top.configure(background=self.bg_color)
+            
+            # Click-through depending on OS
+            if platform.system() == "Windows":
+                top.wm_attributes("-transparentcolor", self.trans_color)
+                # Windows click-through WS_EX_TRANSPARENT | WS_EX_LAYERED
+                import ctypes
+                hwnd = ctypes.windll.user32.GetParent(top.winfo_id())
+                style = ctypes.windll.user32.GetWindowLongW(hwnd, -20)
+                ctypes.windll.user32.SetWindowLongW(hwnd, -20, style | 0x80000 | 0x20)
+            elif platform.system() == "Darwin":
+                pass # Handled differently, or usually TopLevel empty space passes through
+            else:
+                top.attributes("-alpha", 0.7)
+                
+            top.withdraw() # Hidden initially
+            self.borders.append(top)
+
         self.running = True
         
-        # コマンド監視スレッド
+        # Start stdin monitor in background
         threading.Thread(target=self._monitor_stdin, daemon=True).start()
-        
-        log(f"X11 Overlay started: {size_w}x{size_h}, thickness={thickness}")
-        
+
     def set_color(self, color):
-        """全ボーダーの色を変更"""
-        log(f"Set Color: {color}")
-        
+        """四辺の枠の色を変更し、表示/非表示を切り替える"""
         if color == "NONE":
-            for border in self.borders:
-                border.hide()
+            for b in self.borders:
+                b.withdraw()
         else:
-            for border in self.borders:
-                border.set_color(color)
-                border.show()
-        
-        self.disp.flush()
-        
+            for b in self.borders:
+                b.configure(background=color)
+                b.deiconify()
+
     def _monitor_stdin(self):
-        """標準入力からコマンドを読む"""
         while self.running:
             try:
                 line = sys.stdin.readline()
                 if not line: break
                 
                 cmd = line.strip().upper()
-                log(f"Received CMD: {cmd}")
                 
+                # GUI thread safe call
                 if cmd == "REC":
-                    self.set_color("red")
+                    self.root.after(0, self.set_color, "red")
                 elif cmd == "PROC_LOCAL":
-                    self.set_color("yellow")
+                    self.root.after(0, self.set_color, "yellow")
                 elif cmd == "PROC_ONLINE":
-                    self.set_color("cyan")  # 青色
+                    self.root.after(0, self.set_color, "cyan")
                 elif cmd == "READY":
-                    self.set_color("NONE")
+                    self.root.after(0, self.set_color, "NONE")
                 elif cmd == "QUIT":
                     self.running = False
+                    self.root.after(0, self.root.quit)
                     break
             except Exception as e:
-                log(f"Error: {e}")
                 break
-                
+
     def run(self):
-        """イベントループ"""
         try:
-            while self.running:
-                # X11イベント処理（必要に応じて）
-                while self.disp.pending_events():
-                    event = self.disp.next_event()
-                    # 必要に応じてイベント処理
-                    
-                time.sleep(0.1)
+            self.root.mainloop()
         except KeyboardInterrupt:
             pass
         finally:
-            # クリーンアップ
-            for border in self.borders:
-                border.hide()
-            self.disp.close()
+            self.root.destroy()
 
 if __name__ == "__main__":
-    app = StatusOverlay()
+    app = CrossPlatformOverlay()
     app.run()
