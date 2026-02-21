@@ -64,28 +64,8 @@ class FloatingOverlay:
         )
         self.label.pack()
 
-        # 配置の決定
-        self.root.update_idletasks() # サイズ計算のため一度更新
-        w = self.label.winfo_reqwidth()
-        h = self.label.winfo_reqheight()
-        
-        sw = self.root.winfo_screenwidth()
-        sh = self.root.winfo_screenheight()
-        
-        # configから位置を取得
-        pos = load_ui_position()
-        
-        if pos == "top":
-            x = (sw - w) // 2
-            y = 20 # メニューバーなどを考慮し少し下
-        elif pos == "center":
-            x = (sw - w) // 2
-            y = sh - 300 # 中央より少し下
-        else: # bottom (default)
-            x = (sw - w) // 2
-            y = sh - 80 # タスクバーの上
-            
-        self.root.geometry(f"{w}x{h}+{x}+{y}")
+        # 初期配置
+        self._recenter_window()
         self.root.withdraw() # 初期は非表示
 
         self.running = True
@@ -97,6 +77,25 @@ class FloatingOverlay:
         
         # タイマー更新ループ
         self._update_timer()
+
+    def _recenter_window(self):
+        self.root.update_idletasks()
+        w = self.label.winfo_reqwidth()
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        pos = load_ui_position()
+
+        if pos == "top":
+            x = (sw - w) // 2
+            y = 20
+        elif pos == "center":
+            x = (sw - w) // 2
+            y = sh - 300
+        else: # bottom
+            x = (sw - w) // 2
+            y = sh - 80
+            
+        self.root.geometry(f"+{x}+{y}")
 
     def set_status(self, state):
         self.current_state = state
@@ -113,24 +112,9 @@ class FloatingOverlay:
             elif state == "ERROR":
                 self.label.config(text="⚠️ エラー発生", fg="red")
             
+            
             # 再センタリング
-            self.root.update_idletasks()
-            w = self.label.winfo_reqwidth()
-            sw = self.root.winfo_screenwidth()
-            sh = self.root.winfo_screenheight()
-            pos = load_ui_position()
-
-            if pos == "top":
-                x = (sw - w) // 2
-                y = 20
-            elif pos == "center":
-                x = (sw - w) // 2
-                y = sh - 300
-            else: # bottom
-                x = (sw - w) // 2
-                y = sh - 80
-                
-            self.root.geometry(f"+{x}+{y}")
+            self._recenter_window()
             self.root.deiconify()
 
     def _update_timer(self):
@@ -139,6 +123,7 @@ class FloatingOverlay:
                 elapsed = int(time.time() - self.start_time)
                 mins, secs = divmod(elapsed, 60)
                 self.label.config(text=f"🔴 録音中 [{mins:02d}:{secs:02d}]")
+                self._recenter_window()
             # 1秒（1000ms）ごとに再実行
             self.root.after(1000, self._update_timer)
 
