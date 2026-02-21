@@ -1,69 +1,227 @@
 # Open STT Tool
 
-**システム全体どこでも使える、完全クロスプラットフォーム（Windows / macOS / Linux Wayland対応）のローカル＆クラウド対応音声認識（Speech-to-Text）デスクトップアプリケーション。**
+**ホットキー一発で、アクティブなウィンドウに声を直接入力するデスクトップアプリ。**
 
-## 🌟 できること (Features)
-- **ワンボタンで瞬時にテキスト入力**: 設定したグローバル・ホットキー（例: `Ctrl+Shift+Space`）を押して話すだけで、現在アクティブなウィンドウ（ブラウザ、エディタ、チャットアプリなど）のカーソル位置へ直接文字が「自動タイピング」されます。
-- **完全ローカルでの高速・高精度な推論**:
-  - `faster-whisper` エンジンを搭載し、日本語特化の `Kotoba-Whisper v2.2` や高精度な `Whisper Large v3 Turbo` などを使用可能。
-  - INT8量子化によってGPU（VRAM）の消費を抑えつつ、超高速な文字起こしを実現。
-- **クラウドAPI（オンライン）への切り替え設定**:
-  - GPUのない低スペックPCでも、Groq APIやOpenAI APIを利用することで爆速の文字起こしが可能。
-- **柔軟な録音モード**:
-  - トグル（一度押して開始、もう一度押して終了）とホールド（押している間だけ録音）の両モードから自分に合ったスタイルを選択可能。
-- **フローティングUI & 音声フィードバック**:
-  - 作業の邪魔にならない半透明のフローティングステータスバー（表示位置は画面の上・中央・下端から選択可能）で、「録音時間（タイマー）」や「処理中」の状態を視覚的に通知。
-  - 録音の開始・終了時やマイクのエラー発生時にはシステム音が鳴るため、画面を見ずにノールックでの声打ち操作に対応。
-- **賢いメモリ・VRAM管理（ハイブリッドアンロード）**:
-  - 【常時保持モード】最速のレスポンスを実現
-  - 【0秒解放モード】録音ごとにモデルを開放しVRAMを節約（ゲームや別開発との並行に最適）
-  - 【ハイブリッドモード】指定秒数だけメモリ上に待機し、使われなければ自動でアンロード
-- **美しいGUI設定（Flet採用）**:
-  - Fletを用いたモダンな設定画面から、「マイクデバイスの選択」「ホットキー変更」「モデルの自動ダウンロード（最適化）」まですべてがGUI操作で完結。
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com)
+[![Python](https://img.shields.io/badge/python-3.10%2B-brightgreen)](https://python.org)
+[![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 
-## 💡 特筆すべき点 (Unique Points)
-- **真のクロスプラットフォームとWayland対応への執念**:
-  多くのLinux用音声入力ツールが X11（レガシーなウィンドウシステム）や固有のコマンド（`xdotool` や `notify-send` 等）に依存しており Wayland 環境で動かなくなる中、当ツールは `pynput`、 `pystray`、 透過処理特化の `Tkinter` オーバーレイを活用することで、**OS固有の強引なハックなしに Linux(Wayland/X11) / Windows / macOS のすべてにおいて同一のPythonコードで完全に動作する** 非常に堅牢な設計になっています。
-- **マルチプロセス化によるクラッシュフリー設計**:
-  音声キャプチャと重い推論を担う（Worker）プロセスと、ユーザインタフェース・ホットキー監視を担う（Daemon）プロセスを完全に分離しています。片方が重くなったりマイクデバイスが不意に抜けても、アプリ全体がフリーズして落ちてしまうこと（デッドロック）を徹底的に防ぐ設計になっています。
+---
 
-## 👥 どういう人におすすめか (Who is it for?)
-- **タイピングより話す方が早く、サクサク入力したい方**: 日常のメッセンジャー、コードのコメント、ブログの執筆などを「声だけ」で圧倒的な速度で入力し、腱鞘炎も予防したい方。
-- **プライバシーを重視・機密情報の入力が多いビジネスパーソン**: 完全ローカルモデルを使用すれば、音声データが外部のサーバーに送信されることは一切ありません。社外秘の情報や個人的なメモの入力に最適です。
-- **クロスプラットフォームで複数のPCを渡り歩くエンジニア**: WindowsのゲーミングPC、持ち運び用のMacBook、開発用のLinux（Wayland）など、どのOSでも**全く同じ操作感で自分の生産性を高めたい**パワーユーザー。
+グローバルホットキーを押して話すだけで、ブラウザ・エディタ・チャットアプリ等のカーソル位置へ文字を自動入力します。  
+ローカルAIモデルによって、**音声データをインターネット上に送らず**高速に文字起こしが完結します。
+
+---
+
+## 目次 / Table of Contents
+
+- [機能](#機能-features)
+- [動作要件](#動作要件-requirements)
+- [インストール](#インストール-installation)
+- [使い方](#使い方-usage)
+- [設定項目](#設定項目-configuration)
+- [技術スタック](#技術スタック-tech-stack)
+- [License](#license)
+
+---
+
+## 機能 / Features
+
+- **キーボードレスで入力** — ホットキーを押して話すだけで、現在アクティブなウィンドウのカーソル位置にそのままテキストが入力される
+- **完全ローカル処理（プライバシー保護）** — `faster-whisper` エンジンにより音声データは端末の外に出ない。社外秘・個人情報の入力に安心して使える
+- **GPUのない環境でも使える** — ローカル推論が難しいスペックの場合、Groq / OpenAI 等のクラウドAPIへワンクリックで切り替え可能
+- **録音モードを選べる** — トグル（押して開始/もう一度押して終了）とホールド（押している間だけ録音）の2スタイル
+- **VRAMをゲームや他アプリと共有できる** — 「使わない時間はモデルを自動でメモリから解放する」設定で、他の用途に影響を与えない
+- **GUIで全設定が完結** — マイクデバイス・ホットキー・AIモデルの変更はすべてGUI操作で行える（設定ファイルの直接編集不要）
+
+---
+
+## 動作要件 / Requirements
+
+| 項目 | 最低要件 |
+|------|---------|
+| OS | Windows 10+ / macOS 12+ / Linux (X11 or Wayland) |
+| Python | 3.10 以上 |
+| GPU | CUDA対応GPU推奨（ローカルモード時）。なくてもオンラインモードで動作 |
+| マイク | OSが認識するUSBマイク・内蔵マイクなど |
+
+---
+
+## インストール / Installation
+
+### Linux
+```bash
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+bash setup_linux.sh
+```
+
+### macOS
+```bash
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+bash setup_macos.sh
+```
+
+### Windows
+```powershell
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+.\setup_windows.ps1
+```
+
+セットアップ完了後、デスクトップに **Open STT Tool** ショートカットが作成されます。
+
+---
+
+## 使い方 / Usage
+
+1. **起動**: デスクトップのショートカットをダブルクリック（またはシステムトレイのアイコンから操作）
+2. **録音開始**: デフォルトの `Ctrl+Shift+Space` を押して話す
+3. **録音終了**: 同じキーをもう一度押す（トグルモード）
+4. 自動的に文字起こしされ、アクティブなウィンドウへ入力されます
+
+> 設定変更はシステムトレイアイコンを右クリック →「設定を開く」から。
+
+---
+
+## 設定項目 / Configuration
+
+| 設定 | 説明 |
+|------|------|
+| `hotkey` | グローバルホットキー（デフォルト: `<ctrl>+<shift>+<space>`） |
+| `hotkey_mode` | `toggle`（押して開始/停止）or `hold`（長押し中のみ録音） |
+| `model_mode` | `local`（ローカル）/ `online`（クラウドAPI）/ `custom`（カスタムパス） |
+| `local_model_id` | 使用するWhisperモデルID |
+| `local_model_timeout` | アイドル後のモデル解放時間（秒）。`-1` で常時保持 |
+| `ui_position` | フローティングバーの表示位置（`top` / `center` / `bottom`） |
+| `ui_language` | GUIの表示言語（`ja` / `en` / `zh`） |
+
+設定ファイルは `config.json`（プロジェクトルート）に保存されます。GUIから変更した場合も自動でこのファイルに反映されます。
+
+---
+
+## 技術スタック / Tech Stack
+
+| カテゴリ | ライブラリ |
+|----------|-----------|
+| 音声文字起こし | `faster-whisper` |
+| クラウドAPI連携 | `litellm` (Groq, OpenAI 等) |
+| GUI | `Flet` |
+| システムトレイ | `pystray` |
+| グローバルホットキー | `pynput` |
+| オーディオキャプチャ | `sounddevice` |
+| クリップボード制御 | `pyperclip` |
+
+---
+
+## License
+
+MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
+
+---
 
 ---
 
 # Open STT Tool (English)
 
-**A universal, cross-platform (Windows / macOS / Linux Wayland compatible) Speech-to-Text desktop application that auto-types your voice directly into any active window, completely locally.**
+**Dictate into any active window with a global hotkey. No mouse, no clipboard — just talk and type.**
 
-## 🌟 Features
-- **Instant System-wide Typing**: Press your global hotkey (e.g., `Ctrl+Shift+Space`), speak, and your words are instantly "auto-typed" into whichever application you are using (browser, code editor, chat app, etc.).
-- **Fast & Accurate Local Inference**:
-  - Powered by `faster-whisper`. Supports highly optimized models like `Kotoba-Whisper v2.2` (for Japanese) and `Whisper Large v3 Turbo`.
-  - Runs in INT8 quantization to maximize speed and minimize GPU VRAM consumption.
-- **Online Cloud API Fallback**:
-  - No GPU? No problem. Seamlessly switch to cloud providers like Groq or OpenAI for lightning-fast transcription on low-end hardware.
-- **Flexible Hotkey Modes**:
-  - Supports both **Toggle mode** (press to start, press again to stop) and **Hold mode** (record only while holding the key).
-- **Floating Status Overlay & Audio Feedback**:
-  - A non-intrusive, semi-transparent floating bar (position configurable: Top/Center/Bottom) displays recording timer and processing states.
-  - Audio chimes notify you when recording starts/stops or if an error occurs, enabling 100% eyes-free dictation.
-- **Smart Memory & VRAM Management**:
-  - **Always Loaded**: Instant response times (keeps model permanently in memory).
-  - **Zero Memory**: Frees the model immediately after transcription to save VRAM for other tasks.
-  - **Hybrid Timeout**: Keeps the model loaded for a configurable number of seconds before unloading automatically.
-- **Beautiful GUI Configuration via Flet**:
-  - Comes with a sleek graphical settings editor. Download/optimize local models, change microphones, and configure global hotkeys without touching a single JSON file.
+Press your hotkey, speak, and your words appear directly at the cursor in whichever app is active (browser, editor, chat, etc.).  
+A local AI model handles all transcription **on-device**, so no audio ever leaves your machine.
 
-## 💡 Unique Points
-- **A Truly Cross-Platform Triumph (Wayland Compatible)**:
-  While many Linux dictation tools rely on legacy X11 utilities (`xdotool`, `notify-send`) and break entirely on modern Wayland systems, this tool is built from the ground up using `pynput`, `pystray`, and multi-OS transparent `Tkinter` to ensure **perfect operation across Linux (Wayland & X11), Windows, and macOS—using the exact same codebase without dirty OS hacks.**
-- **Crash-Free Separation Architecture**:
-  The heavy lifting of audio recording and AI inference (Worker process) is strictly separated from the system tray and hotkey monitoring (Daemon process). This dual-process architecture ensures that even if a transcription takes too long or a microphone gets unplugged suddenly, your main application will never freeze, stutter, or crash.
+---
 
-## 👥 Who is this for?
-- **Speed Typists & Health Conscious Users**: If you want to blast through emails, code documentation, or chat messages much faster than typing, or if you're trying to prevent Repetitive Strain Injury (RSI).
-- **Privacy Advocates & Enterprise Users**: By using the Fast Local Models, your voice data never leaves your machine. Perfect for dictating highly confidential work documents, NDAs, or personal journals.
-- **Nomadic Power Users & Engineers**: People who work across multiple operating systems—a Windows rig, a Linux development machine, and a macOS laptop—and want the exact same reliable voice setup and productivity everywhere.
+## Features
+
+- **Truly hands-free input** — Press a hotkey, talk, release. Text appears at the cursor in any app
+- **Private by default** — All processing happens locally via `faster-whisper`. Audio never sent to the cloud
+- **Works without a GPU** — Swap to Groq or OpenAI cloud API in one click if local inference is too slow on your machine
+- **Choose your recording style** — Toggle mode (press to start/stop) or Hold mode (record only while pressing)
+- **VRAM-friendly** — Configure the model to auto-unload after a period of inactivity, freeing memory for games or other workloads
+- **Everything configurable via GUI** — Change mic, hotkey, and AI model without editing any config files
+
+---
+
+## Requirements
+
+| Item | Requirement |
+|------|-------------|
+| OS | Windows 10+ / macOS 12+ / Linux (X11 or Wayland) |
+| Python | 3.10+ |
+| GPU | CUDA GPU recommended for local mode. Not required with online mode |
+| Microphone | Any OS-recognized USB/built-in microphone |
+
+---
+
+## Installation
+
+### Linux
+```bash
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+bash setup_linux.sh
+```
+
+### macOS
+```bash
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+bash setup_macos.sh
+```
+
+### Windows
+```powershell
+git clone https://github.com/your-username/open-stt-tool.git
+cd open-stt-tool
+.\setup_windows.ps1
+```
+
+A desktop shortcut will be created automatically on setup.
+
+---
+
+## Usage
+
+1. **Launch**: Double-click the desktop shortcut or start from the system tray
+2. **Start**: Press `Ctrl+Shift+Space` (default) and speak
+3. **Stop**: Press the hotkey again (toggle mode)
+4. The transcription is automatically typed into the active window
+
+> To change settings, right-click the system tray icon → "Open Settings".
+
+---
+
+## Configuration
+
+| Key | Description |
+|-----|-------------|
+| `hotkey` | Global hotkey (default: `<ctrl>+<shift>+<space>`) |
+| `hotkey_mode` | `toggle` or `hold` |
+| `model_mode` | `local` / `online` / `custom` |
+| `local_model_id` | Whisper model ID to use |
+| `local_model_timeout` | Seconds before unloading model. `-1` = always loaded |
+| `ui_position` | Floating bar position: `top` / `center` / `bottom` |
+| `ui_language` | Interface language: `ja` / `en` / `zh` |
+
+Config is stored in `config.json` at the project root. The GUI writes to this file automatically.
+
+---
+
+## Tech Stack
+
+| Category | Library |
+|----------|---------|
+| Transcription | `faster-whisper` |
+| Cloud API | `litellm` (Groq, OpenAI, etc.) |
+| GUI | `Flet` |
+| System tray | `pystray` |
+| Global hotkey | `pynput` |
+| Audio capture | `sounddevice` |
+| Clipboard | `pyperclip` |
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
