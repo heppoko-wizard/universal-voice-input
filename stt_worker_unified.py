@@ -23,6 +23,13 @@ import gc
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - [WORKER] %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger("UnifiedWorker")
 
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+os.makedirs(log_dir, exist_ok=True)
+file_handler = logging.FileHandler(os.path.join(log_dir, "stt_worker.log"))
+file_formatter = logging.Formatter('%(asctime)s - [WORKER] %(levelname)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
 # 初期メモリ使用量ログ
 try:
     import resource
@@ -239,26 +246,44 @@ class UnifiedSTTWorker:
             self.audio_queue.queue.clear()
             
         def _record_loop():
+            # 無音監視用
+            silent_chunks = 0
+            # 1チャンクは通常約100ms以内。20回連続（約2秒）完全無音ならハングと判定
+            MAX_SILENT_CHUNKS = 20
+            
             device_idx = self.config.get("device_index")
             if device_idx == "default": device_idx = None
             sample_rate = self.config.get("sample_rate", DEFAULT_SAMPLE_RATE)
             
-            # デバイスのネイティブチャンネル数を取得
             rec_channels = CHANNELS
             try:
                 if device_idx is not None:
+                    # デバイス情報を取得し、そのデバイスがサポートする最大入力チャンネル数をそのまま使う
                     dev_info = sd.query_devices(device_idx)
                     max_ch = dev_info.get("max_input_channels", 1)
-                    if max_ch >= 2 and CHANNELS == 1:
-                        # hwデバイスはモノラル非対応の場合がある → ステレオで録音
-                        rec_channels = 2
-                        logger.info(f"Device {device_idx} requires {max_ch}ch, recording in stereo")
+                    if max_ch > 0:
+                        rec_channels = max_ch
+                        logger.info(f"Device {device_idx} native channels: {max_ch}")
+                else:
+                    # default devices
+                    dev_info = sd.query_devices(kind='input')
+                    max_ch = dev_info.get("max_input_channels", 1)
+                    if max_ch > 0:
+                        rec_channels = max_ch
+                        logger.info(f"Default device native channels: {max_ch}")
             except Exception as e:
-                logger.warning(f"Could not query device info: {e}")
+                logger.warning(f"Could not query device info, falling back to {rec_channels}ch: {e}")
             
             def _callback(indata, frames, time_info, status):
+                nonlocal silent_chunks
+                
+                # 完全無音（全要素が0.0）かどうかの判定
+                if np.max(np.abs(indata)) < 1e-6:
+                    silent_chunks += 1
+                else:
+                    silent_chunks = 0
+                    
                 if rec_channels > 1:
-                    # ステレオ→モノラル変換（左チャンネルのみ or 平均）
                     mono = indata.mean(axis=1, keepdims=True)
                     self._audio_callback(mono, frames, time_info, status)
                 else:
@@ -268,11 +293,17 @@ class UnifiedSTTWorker:
                 with sd.InputStream(samplerate=sample_rate, device=device_idx, channels=rec_channels, callback=_callback):
                     logger.info(f"Recording STARTED (device={device_idx}, rate={sample_rate}Hz, channels={rec_channels})")
                     while not self.stop_recording_event.is_set():
-                        time.sleep(0.05)
+                        time.sleep(0.1)
+                        if silent_chunks >= MAX_SILENT_CHUNKS:
+                            logger.error("Dead device detected: completely silent for ~2 seconds. Aborting.")
+                            self.recording = False
+                            print("[STATUS] SILENT_ERROR")
+                            sys.stdout.flush()
+                            break
             except Exception as e:
-                logger.error(f"Recording error: {e}")
+                logger.error(f"Recording error: {e}", exc_info=True)
                 self.recording = False
-                print("[STATUS] READY")
+                print("[STATUS] DEVICE_ERROR")
                 sys.stdout.flush()
         
         self.recording_thread = threading.Thread(target=_record_loop, daemon=True)

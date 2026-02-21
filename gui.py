@@ -282,49 +282,39 @@ def main(page: ft.Page):
     )
     
     # Device Selection
-    default_dev = config.get("default_device_index")
-    device_options = [ft.dropdown.Option(key="default", text="Default System Device")]
-    for d in devices:
-        label = f"{d['name']}"
-        if str(d["id"]) == str(default_dev):
-            label = f"★ {label}"
-        device_options.append(ft.dropdown.Option(key=str(d["id"]), text=label))
+    current_device_index = config.get("device_index")
+    is_manual_mic = current_device_index is not None
     
-    current_device = str(config.get("device_index")) if config.get("device_index") is not None else "default"
-    if not any(d.key == current_device for d in device_options):
-        current_device = "default"
-        
+    cb_manual_mic = ft.Checkbox(
+        label=t("mic_manual_select", default="マイクを手動で選択する (非推奨)"),
+        value=is_manual_mic
+    )
+    
+    device_options = []
+    for d in devices:
+        device_options.append(ft.dropdown.Option(key=str(d["id"]), text=d["name"]))
+    
+    current_device_str = str(current_device_index) if is_manual_mic else None
+    if current_device_str and not any(d.key == current_device_str for d in device_options):
+        current_device_str = None
+        if device_options:
+            current_device_str = device_options[0].key
+            
     dd_device = ft.Dropdown(
         label=t("mic_device"),
         options=device_options,
-        value=current_device,
+        value=current_device_str,
         expand=True,
+        visible=is_manual_mic,
     )
 
-    default_status = ft.Text("", size=12, color="green")
-
-    def on_set_default(e):
-        selected = dd_device.value
-        if selected == "default":
-            config["default_device_index"] = None
-            name = "System Default"
-        else:
-            try:
-                config["default_device_index"] = int(selected)
-            except ValueError:
-                config["default_device_index"] = selected
-            name = next((d["name"] for d in devices if str(d["id"]) == selected), selected)
-        config_manager.save_config(config)
-        default_status.value = t("default_device_set", name=name)
+    def on_manual_mic_change(e):
+        dd_device.visible = cb_manual_mic.value
         page.update()
 
-    btn_set_default = ft.IconButton(
-        icon=ft.Icons.STAR,
-        tooltip=t("set_default_device"),
-        on_click=on_set_default,
-    )
-    
-    row_device = ft.Row([dd_device, btn_set_default])
+    cb_manual_mic.on_change = on_manual_mic_change
+
+    row_device = ft.Column([cb_manual_mic, dd_device])
 
     # Hotkey
     txt_hotkey = ft.TextField(label=t("hotkey"), value=config.get("hotkey", "<ctrl>+<shift>+<space>"))
@@ -400,7 +390,7 @@ def main(page: ft.Page):
                 config["local_model_id"] = dd_model.value
             # online モードの場合は local_model_id を変更しない
             
-            if dd_device.value == "default":
+            if not cb_manual_mic.value or not dd_device.value:
                 config["device_index"] = None
             else:
                 try:
@@ -560,7 +550,7 @@ def main(page: ft.Page):
             content=ft.Column([
                 ft.Text(t("input_settings"), size=18, weight="bold"),
                 row_device,
-                default_status,
+                ft.Container(height=10),
                 txt_hotkey,
                 dd_hotkey_mode,
                 txt_speed

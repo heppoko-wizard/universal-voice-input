@@ -14,6 +14,20 @@ import socket
 from pynput import keyboard
 import config_manager
 import platform_utils
+import logging
+
+log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs")
+os.makedirs(log_dir, exist_ok=True)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - [DAEMON] %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, "stt_daemon.log")),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger("Daemon")
 
 def check_singleton():
     """Ensure only one instance runs using an abstract socket."""
@@ -54,7 +68,7 @@ class OverlayManager:
     
     def _spawn(self):
         try:
-            print("Spawning overlay...")
+            logger.info("Spawning overlay...")
             self.process = subprocess.Popen(
                 [PYTHON_CMD, OVERLAY_SCRIPT],
                 stdin=subprocess.PIPE,
@@ -65,7 +79,7 @@ class OverlayManager:
                 cwd=os.path.dirname(os.path.abspath(__file__))
             )
         except Exception as e:
-            print(f"Failed to spawn overlay: {e}")
+            logger.info(f"Failed to spawn overlay: {e}")
             self.process = None
 
     def send_command(self, cmd):
@@ -107,7 +121,7 @@ class WorkerManager:
 
     def _spawn(self):
         try:
-            print("Spawning worker...")
+            logger.info("Spawning worker...")
             self.process = subprocess.Popen(
                 [PYTHON_CMD, WORKER_SCRIPT],
                 stdin=subprocess.PIPE,
@@ -121,7 +135,7 @@ class WorkerManager:
             self.monitor_thread.start()
             
         except Exception as e:
-            print(f"Failed to spawn worker: {e}")
+            logger.info(f"Failed to spawn worker: {e}")
             self.process = None
 
     def _monitor_output(self):
@@ -131,17 +145,17 @@ class WorkerManager:
             for line in iter(self.process.stdout.readline, ''):
                 if not line: break
                 line = line.strip()
-                print(f"[WORKER] {line}")
+                logger.info(f"[WORKER] {line}")
                 
                 if line.startswith("[STATUS]"):
                     status = line.replace("[STATUS]", "").strip()
                     if self.status_callback:
                         self.status_callback(status)
         except Exception as e:
-            print(f"Monitor error: {e}")
+            logger.info(f"Monitor error: {e}")
         
         # ワーカープロセス終了時: 録音状態を確実にリセット
-        print("[WORKER] Process exited. Resetting state.")
+        logger.info("[WORKER] Process exited. Resetting state.")
         if self.status_callback:
             self.status_callback("READY")
 
@@ -153,7 +167,7 @@ class WorkerManager:
                     self.process.stdin.write(cmd + "\n")
                     self.process.stdin.flush()
                 except BrokenPipeError:
-                    print("Worker pipe broken. Restarting...")
+                    logger.info("Worker pipe broken. Restarting...")
                     self.process = None
                     self._spawn()
                     if self.process:
@@ -203,7 +217,7 @@ class STTDaemonAppIndicator:
         # 起動時マイクチェック（バックグラウンド）
         threading.Thread(target=self._startup_mic_check, daemon=True).start()
         
-        print(f"--- STT Daemon (AppIndicator) ---")
+        logger.info(f"--- STT Daemon (AppIndicator) ---")
         
     def rebuild_menu(self):
         """設定言語に基づいてメニューを再構築"""
@@ -231,7 +245,7 @@ class STTDaemonAppIndicator:
         self.overlay_mgr.ensure_running()
         self.worker_mgr.ensure_running()
         
-        print(f"--- STT Daemon (AppIndicator) ---")
+        logger.info(f"--- STT Daemon (AppIndicator) ---")
         
     def on_worker_status(self, status):
         self.overlay_mgr.send_command(status)
@@ -253,6 +267,22 @@ class STTDaemonAppIndicator:
                 i18n.get_text("model_load_error", lang),
                 "critical"
             )
+        elif status == "DEVICE_ERROR":
+            self.recording = False
+            self.overlay_mgr.send_command("READY")
+            self._send_notification(
+                "STT - Device Error",
+                "マイクデバイスにアクセスできませんでした。\nUSBを挿し直すか、設定を確認してください。",
+                "critical"
+            )
+        elif status == "SILENT_ERROR":
+            self.recording = False
+            self.overlay_mgr.send_command("READY")
+            self._send_notification(
+                "STT - Mic Warning",
+                "マイクが音を拾っていません。\nミュートになっていないか、接続を確認してください。",
+                "normal"
+            )
 
     def _startup_mic_check(self):
         """起動時のマイクチェック（警告のみ、config書き換えなし）"""
@@ -260,27 +290,27 @@ class STTDaemonAppIndicator:
         try:
             import mic_checker
         except ImportError:
-            print("mic_checker module not found, skipping mic check")
+            logger.info("mic_checker module not found, skipping mic check")
             return
         
         device_idx = self.config.get("device_index")
         sample_rate = self.config.get("sample_rate", 44100)
         
-        print(f"Mic check: device = {device_idx}")
+        logger.info(f"Mic check: device = {device_idx}")
         result = mic_checker.check_device(device_idx, sample_rate=sample_rate)
         
         if result["error"]:
             # デバイスを開けなかった
             msg = f"マイク ({result['device_name']}) にアクセスできません: {result['error']}"
-            print(f"Mic check: WARNING - {msg}")
+            logger.info(f"Mic check: WARNING - {msg}")
             self._send_notification("STT - Mic Check", msg, "warning")
         elif result["silent"]:
             # 完全無音
             msg = f"マイク ({result['device_name']}) が無音です。接続を確認してください。"
-            print(f"Mic check: WARNING - {msg}")
+            logger.info(f"Mic check: WARNING - {msg}")
             self._send_notification("STT - Mic Check", msg, "warning")
         else:
-            print(f"Mic check: OK - {result['device_name']} (RMS={result['rms']:.6f})")
+            logger.info(f"Mic check: OK - {result['device_name']} (RMS={result['rms']:.6f})")
     
     def _send_notification(self, title, message, urgency="normal"):
         """デスクトップ通知を送信"""
@@ -288,30 +318,30 @@ class STTDaemonAppIndicator:
             cmd = ["notify-send", "-u", urgency, "-i", ICON_PATH, title, message]
             subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except Exception as e:
-            print(f"Notification error: {e}")
+            logger.info(f"Notification error: {e}")
 
     def on_activate(self):
         """Toggle mode の動作"""
         if self.recording:
-            print("Hotkey: STOP (Toggle)")
+            logger.info("Hotkey: STOP (Toggle)")
             self.worker_mgr.send_command("STOP")
             self.recording = False
         else:
-            print("Hotkey: START (Toggle)")
+            logger.info("Hotkey: START (Toggle)")
             self.worker_mgr.send_command("START")
             self.recording = True
 
     def on_press_hold(self):
         """Hold mode の開始動作"""
         if not self.recording:
-            print("Hotkey: START (Hold)")
+            logger.info("Hotkey: START (Hold)")
             self.worker_mgr.send_command("START")
             self.recording = True
 
     def on_release_hold(self):
         """Hold mode の終了動作"""
         if self.recording:
-            print("Hotkey: STOP (Hold)")
+            logger.info("Hotkey: STOP (Hold)")
             self.worker_mgr.send_command("STOP")
             self.recording = False
 
@@ -347,20 +377,20 @@ class STTDaemonAppIndicator:
             self.listener = keyboard.Listener(on_press=on_press, on_release=on_release)
             self.listener.start()
             
-            print(f"Hotkey Listener Started: {self.hotkey} (Mode: {self.hotkey_mode})")
+            logger.info(f"Hotkey Listener Started: {self.hotkey} (Mode: {self.hotkey_mode})")
             self.overlay_mgr.send_command("READY")
         except Exception as e:
-            print(f"Hotkey Error: {e}")
+            logger.info(f"Hotkey Error: {e}")
 
     def reload_config(self):
-        print("Reloading configuration...")
+        logger.info("Reloading configuration...")
         try:
             self.config = config_manager.load_config()
             new_hotkey = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
             new_mode = self.config.get("hotkey_mode", "toggle")
             
             if new_hotkey != self.hotkey or new_mode != self.hotkey_mode:
-                print(f"Hotkey updated: {self.hotkey}({self.hotkey_mode}) -> {new_hotkey}({new_mode})")
+                logger.info(f"Hotkey updated: {self.hotkey}({self.hotkey_mode}) -> {new_hotkey}({new_mode})")
                 self.hotkey = new_hotkey
                 self.hotkey_mode = new_mode
                 if self.listener:
@@ -375,21 +405,21 @@ class STTDaemonAppIndicator:
             GLib.idle_add(self.rebuild_menu)
             
         except Exception as e:
-            print(f"Reload failed: {e}")
+            logger.info(f"Reload failed: {e}")
 
     def on_settings(self, widget):
         def _run():
-            print("Opening GUI...")
+            logger.info("Opening GUI...")
             try:
                 subprocess.run([PYTHON_CMD, "gui.py"], cwd=os.path.dirname(os.path.abspath(__file__)))
-                print("GUI closed.")
+                logger.info("GUI closed.")
                 GLib.idle_add(self.reload_config)
             except Exception as e:
-                print(f"GUI Error: {e}")
+                logger.info(f"GUI Error: {e}")
         threading.Thread(target=_run, daemon=True).start()
 
     def on_exit(self, widget):
-        print("Exiting...")
+        logger.info("Exiting...")
         if self.listener:
             self.listener.stop()
         self.worker_mgr.cleanup()
