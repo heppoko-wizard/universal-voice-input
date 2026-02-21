@@ -588,10 +588,6 @@ def main(page: ft.Page):
     container_local_content = ft.Column([
         ft.Text(t("local_model_settings"), size=18, weight="bold"),
         ft.Divider(),
-        txt_timeout_label,
-        cb_infinite,
-        slider_timeout,
-        ft.Container(height=10),
         dd_model,
         btn_convert,
         ft.Text(t("convert_help"), size=12, color="grey"),
@@ -616,10 +612,6 @@ def main(page: ft.Page):
         ft.Text(t("custom_model"), size=18, weight="bold"),
         ft.Divider(),
         txt_custom_model,
-        ft.Container(height=10),
-        txt_timeout_label,
-        cb_infinite,
-        slider_timeout,
     ])
 
     card_custom_settings = ft.Card(
@@ -630,11 +622,27 @@ def main(page: ft.Page):
         visible=(raw_mode == "custom")
     )
 
+    # Memory / Timeout Settings (Visible for both local and custom)
+    card_memory_settings = ft.Card(
+        content=ft.Container(
+            padding=15,
+            content=ft.Column([
+                ft.Text(t("timeout_label"), size=18, weight="bold"),
+                ft.Divider(),
+                txt_timeout_label,
+                cb_infinite,
+                slider_timeout,
+            ])
+        ),
+        visible=(raw_mode in ["local", "custom"])
+    )
+
     def on_mode_change(e):
         mode = rg_mode.value
         container_online.visible = (mode == "online")
         card_local_settings.visible = (mode == "local")
         card_custom_settings.visible = (mode == "custom")
+        card_memory_settings.visible = (mode in ["local", "custom"])
         page.update()
 
     rg_mode.on_change = on_mode_change
@@ -670,6 +678,7 @@ def main(page: ft.Page):
         card_inference,
         card_local_settings,
         card_custom_settings,
+        card_memory_settings,
         ft.Container(height=20),
     )
 
