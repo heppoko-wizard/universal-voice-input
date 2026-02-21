@@ -49,6 +49,19 @@
 
 ## インストール / Installation
 
+最も簡単な方法は、[Releases](https://github.com/your-username/open-stt-tool/releases) ページから最新の ZIP ファイルをダウンロードすることです。
+
+1. [Releases](https://github.com/your-username/open-stt-tool/releases) から最新の `open-stt-tool-vX.X.X.zip` をダウンロード
+2. 任意のフォルダに解凍
+3. フォルダ内の各 OS 向けセットアップスクリプトを実行：
+   - **Windows**: `setup_windows.ps1` を右クリックして「PowerShell で実行」
+   - **macOS / Linux**: ターミナルで `bash setup_macos.sh` または `bash setup_linux.sh` を実行
+
+---
+
+### 開発者向け (Manual Install)
+ソースコードを取得してインストールする場合：
+
 ### Linux
 ```bash
 git clone https://github.com/your-username/open-stt-tool.git
@@ -155,6 +168,19 @@ A local AI model handles all transcription **on-device**, so no audio ever leave
 ---
 
 ## Installation
+
+The easiest way is to download the latest ZIP from the [Releases](https://github.com/your-username/open-stt-tool/releases) page.
+
+1. Download `open-stt-tool-vX.X.X.zip` from [Releases](https://github.com/your-username/open-stt-tool/releases).
+2. Extract the ZIP to any folder.
+3. Run the setup script for your OS:
+   - **Windows**: Right-click `setup_windows.ps1` and select "Run with PowerShell".
+   - **macOS / Linux**: Run `bash setup_macos.sh` or `bash setup_linux.sh` in your terminal.
+
+---
+
+### For Developers (Manual Install)
+If you prefer to clone the repository:
 
 ### Linux
 ```bash

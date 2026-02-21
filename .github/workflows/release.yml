@@ -1,0 +1,56 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Create Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create Package
+        run: |
+          PROJECT_NAME="open-stt-tool"
+          TAG_NAME="${GITHUB_REF#refs/tags/}"
+          DIST_DIR="dist"
+          mkdir -p $DIST_DIR
+          
+          # 共通の配布ファイルリスト
+          # config.json, venv, models などは含めない
+          FILES=(
+            "gui.py"
+            "stt_daemon.py"
+            "stt_worker_unified.py"
+            "status_overlay.py"
+            "config_manager.py"
+            "i18n.py"
+            "platform_utils.py"
+            "requirements.txt"
+            "stt_icon.png"
+            "setup_linux.sh"
+            "setup_macos.sh"
+            "setup_windows.ps1"
+            "README.md"
+            "LICENSE"
+          )
+          
+          # ZIPを作成 (全プラットフォーム共通構成)
+          zip -r $DIST_DIR/${PROJECT_NAME}-${TAG_NAME}.zip "${FILES[@]}"
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
