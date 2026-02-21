@@ -68,22 +68,22 @@
 
 ### Linux
 ```bash
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 bash setup_linux.sh
 ```
 
 ### macOS
 ```bash
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 bash setup_macos.sh
 ```
 
 ### Windows
 ```powershell
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 .\setup_windows.ps1
 ```
 
@@ -192,22 +192,22 @@ If you prefer to clone the repository:
 
 ### Linux
 ```bash
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 bash setup_linux.sh
 ```
 
 ### macOS
 ```bash
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 bash setup_macos.sh
 ```
 
 ### Windows
 ```powershell
-git clone https://github.com/your-username/open-stt-tool.git
-cd open-stt-tool
+git clone https://github.com/heppoko-wizard/universal-voice-input.git
+cd universal-voice-input
 .\setup_windows.ps1
 ```
 
