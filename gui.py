@@ -377,6 +377,7 @@ def main(page: ft.Page):
             config["hotkey_mode"] = dd_hotkey_mode.value
             config["add_punctuation"] = cb_punctuation.value
             config["auto_start"] = cb_auto_start.value
+            config["ui_position"] = dd_ui_position.value
             
             # モデルモード
             mode = rg_mode.value
