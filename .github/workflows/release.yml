@@ -18,7 +18,7 @@ jobs:
 
       - name: Create Packages
         run: |
-          PROJECT_NAME="open-stt-tool"
+          PROJECT_NAME="universal-voice-input"
           TAG_NAME="${GITHUB_REF#refs/tags/}"
           DIST_DIR="dist"
           mkdir -p $DIST_DIR

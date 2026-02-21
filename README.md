@@ -1,8 +1,8 @@
-# Open STT Tool
+# Universal Voice Input
 
 **ホットキー一発で、アクティブなウィンドウに声を直接入力するデスクトップアプリ。**
 
-[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com/heppoko-wizard/universal-voice-input)
 [![Python](https://img.shields.io/badge/python-3.10%2B-brightgreen)](https://python.org)
 [![License](https://img.shields.io/badge/license-MIT-orange)](LICENSE)
 
@@ -49,12 +49,12 @@
 
 ## インストール / Installation
 
-最も簡単な方法は、[Releases](https://github.com/your-username/open-stt-tool/releases) ページから自分の OS 用の ZIP ファイルをダウンロードすることです。
+最も簡単な方法は、[Releases](https://github.com/heppoko-wizard/universal-voice-input/releases) ページから自分の OS 用の ZIP ファイルをダウンロードすることです。
 
-1. [Releases](https://github.com/your-username/open-stt-tool/releases) から最新の ZIP をダウンロード
-   - Windows: `open-stt-tool-vX.X.X-windows.zip`
-   - macOS: `open-stt-tool-vX.X.X-macos.zip`
-   - Linux: `open-stt-tool-vX.X.X-linux.zip`
+1. [Releases](https://github.com/heppoko-wizard/universal-voice-input/releases) から最新の ZIP をダウンロード
+   - Windows: `universal-voice-input-vX.X.X-windows.zip`
+   - macOS: `universal-voice-input-vX.X.X-macos.zip`
+   - Linux: `universal-voice-input-vX.X.X-linux.zip`
 2. 任意のフォルダに解凍
 3. フォルダ内のセットアップスクリプトを実行：
    - **Windows**: `setup_windows.ps1` を右クリックして「PowerShell で実行」
@@ -140,7 +140,7 @@ MIT License — 詳細は [LICENSE](LICENSE) を参照してください。
 
 ---
 
-# Open STT Tool (English)
+# Universal Voice Input (English)
 
 **Dictate into any active window with a global hotkey. No mouse, no clipboard — just talk and type.**
 
@@ -173,12 +173,12 @@ A local AI model handles all transcription **on-device**, so no audio ever leave
 
 ## Installation
 
-The easiest way is to download the correct ZIP for your OS from the [Releases](https://github.com/your-username/open-stt-tool/releases) page.
+The easiest way is to download the correct ZIP for your OS from the [Releases](https://github.com/heppoko-wizard/universal-voice-input/releases) page.
 
-1. Download the ZIP for your OS from [Releases](https://github.com/your-username/open-stt-tool/releases):
-   - Windows: `open-stt-tool-vX.X.X-windows.zip`
-   - macOS: `open-stt-tool-vX.X.X-macos.zip`
-   - Linux: `open-stt-tool-vX.X.X-linux.zip`
+1. Download the ZIP for your OS from [Releases](https://github.com/heppoko-wizard/universal-voice-input/releases):
+   - Windows: `universal-voice-input-vX.X.X-windows.zip`
+   - macOS: `universal-voice-input-vX.X.X-macos.zip`
+   - Linux: `universal-voice-input-vX.X.X-linux.zip`
 2. Extract the ZIP to any folder.
 3. Run the setup script:
    - **Windows**: Right-click `setup_windows.ps1` and select "Run with PowerShell".
