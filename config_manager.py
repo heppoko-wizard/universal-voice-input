@@ -2,7 +2,9 @@ import json
 import os
 import sounddevice as sd
 
-CONFIG_FILE = "config.json"
+# プロジェクトルートディレクトリを取得し、絶対パスで config.json を指定
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+CONFIG_FILE = os.path.join(PROJECT_ROOT, "config.json")
 
 DEFAULT_CONFIG = {
     "api_order": ["groq", "openai"],

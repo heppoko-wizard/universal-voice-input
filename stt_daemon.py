@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-STT Daemon - AppIndicator Edition
+STT Daemon - pystray Edition (Cross-Platform)
 ホットキーを監視し、Unified Workerを制御する。
-AppIndicatorでシステムトレイに常駐（KDE/GNOME対応）
+pystrayでシステムトレイに常駐するクロスプラットフォーム実装。
 """
 import sys
 import os
@@ -30,25 +30,19 @@ logging.basicConfig(
 logger = logging.getLogger("Daemon")
 
 def check_singleton():
-    """Ensure only one instance runs using an abstract socket."""
-    # Abstract namespace socket (starts with null byte)
-    # This is automatically cleaned up by OS when process dies
-    socket_name = "\0stt_daemon_singleton_lock"
-    
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    """Ensure only one instance runs using a local TCP port."""
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        sock.bind(socket_name)
+        sock.bind(("127.0.0.1", 34291))
         # Keep socket open to hold the lock
         return sock 
     except socket.error:
         print("Another instance is already running. Exiting.")
         sys.exit(1)
 
-# AppIndicator imports
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('AppIndicator3', '0.1')
-from gi.repository import Gtk, AppIndicator3, GLib
+# pystray imports
+import pystray
+from PIL import Image
 
 # --- Configuration ---
 WORKER_SCRIPT = "stt_worker_unified.py"
@@ -185,7 +179,7 @@ class WorkerManager:
                     self.process.terminate()
                 self.process = None
 
-class STTDaemonAppIndicator:
+class STTDaemon:
     def __init__(self):
         self.config = config_manager.load_config()
         self.hotkey = self.config.get("hotkey", "<ctrl>+<shift>+<space>")
@@ -196,13 +190,13 @@ class STTDaemonAppIndicator:
         self.recording = False
         self.listener = None
         
-        # AppIndicator作成
-        self.indicator = AppIndicator3.Indicator.new(
-            "stt-daemon",
-            ICON_PATH,
-            AppIndicator3.IndicatorCategory.APPLICATION_STATUS
-        )
-        self.indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+        self.icon = pystray.Icon("stt-daemon")
+        self.icon.title = "STT Daemon"
+        try:
+            self.icon.icon = Image.open(ICON_PATH)
+        except Exception as e:
+            logger.error(f"Failed to load icon: {e}")
+            self.icon.icon = Image.new('RGB', (64, 64), color='black')
         
         # メニュー作成
         self.rebuild_menu()
@@ -211,41 +205,25 @@ class STTDaemonAppIndicator:
         self.overlay_mgr.ensure_running()
         self.worker_mgr.ensure_running()
         
-        # ホットキー設定
-        self.setup_hotkey()
-        
         # 起動時マイクチェック（バックグラウンド）
         threading.Thread(target=self._startup_mic_check, daemon=True).start()
         
-        logger.info(f"--- STT Daemon (AppIndicator) ---")
+        logger.info(f"--- STT Daemon (pystray) ---")
         
     def rebuild_menu(self):
         """設定言語に基づいてメニューを再構築"""
         import i18n
         lang = self.config.get("ui_language", "ja")
         
-        menu = Gtk.Menu()
-        
-        item_settings = Gtk.MenuItem(label=i18n.get_text("tray_settings", lang))
-        item_settings.connect("activate", self.on_settings)
-        menu.append(item_settings)
-        
-        item_quit = Gtk.MenuItem(label=i18n.get_text("tray_exit", lang))
-        item_quit.connect("activate", self.on_exit)
-        menu.append(item_quit)
-        
-        menu.show_all()
-        self.indicator.set_menu(menu)
+        menu_items = [
+            pystray.MenuItem(i18n.get_text("tray_settings", lang), self.on_settings),
+            pystray.MenuItem(i18n.get_text("tray_exit", lang), self.on_exit)
+        ]
+        self.icon.menu = pystray.Menu(*menu_items)
         
         # ホットキー設定
         self.hotkey_mode = self.config.get("hotkey_mode", "toggle")
         self.setup_hotkey()
-        
-        # プリロード
-        self.overlay_mgr.ensure_running()
-        self.worker_mgr.ensure_running()
-        
-        logger.info(f"--- STT Daemon (AppIndicator) ---")
         
     def on_worker_status(self, status):
         self.overlay_mgr.send_command(status)
@@ -313,10 +291,9 @@ class STTDaemonAppIndicator:
             logger.info(f"Mic check: OK - {result['device_name']} (RMS={result['rms']:.6f})")
     
     def _send_notification(self, title, message, urgency="normal"):
-        """デスクトップ通知を送信"""
+        """デスクトップ通知を送信（pystray機能を使用）"""
         try:
-            cmd = ["notify-send", "-u", urgency, "-i", ICON_PATH, title, message]
-            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self.icon.notify(message, title=title)
         except Exception as e:
             logger.info(f"Notification error: {e}")
 
@@ -347,6 +324,13 @@ class STTDaemonAppIndicator:
 
     def setup_hotkey(self):
         try:
+            # 古いリスナーがあれば安全に停止（二重起動防止）
+            if getattr(self, "listener", None):
+                try:
+                    self.listener.stop()
+                except Exception as e:
+                    logger.warning(f"Failed to stop previous hotkey listener: {e}")
+            
             # pynputのHotKeyオブジェクトを作成
             hotkey_str = self.hotkey
             # pynput.keyboard.HotKey.parse を通して構造化
@@ -401,41 +385,51 @@ class STTDaemonAppIndicator:
             self.overlay_mgr.cleanup()
             self.overlay_mgr.ensure_running()
             
-            # メニューを再構築（言語変更の反映）
-            GLib.idle_add(self.rebuild_menu)
+            # メニューを再構築
+            self.rebuild_menu()
+            self.icon.update_menu()
             
         except Exception as e:
             logger.info(f"Reload failed: {e}")
 
-    def on_settings(self, widget):
+    def on_settings(self, icon, item):
         def _run():
             logger.info("Opening GUI...")
             try:
                 subprocess.run([PYTHON_CMD, "gui.py"], cwd=os.path.dirname(os.path.abspath(__file__)))
                 logger.info("GUI closed.")
-                GLib.idle_add(self.reload_config)
+                self.reload_config()
             except Exception as e:
                 logger.info(f"GUI Error: {e}")
         threading.Thread(target=_run, daemon=True).start()
 
-    def on_exit(self, widget):
+    def on_exit(self, icon, item):
         logger.info("Exiting...")
         if self.listener:
             self.listener.stop()
         self.worker_mgr.cleanup()
         self.overlay_mgr.cleanup()
-        Gtk.main_quit()
+        self.icon.stop()
 
     def run(self):
         # シグナルハンドラ設定
-        signal.signal(signal.SIGINT, signal.SIG_DFL)
-        # SIGUSR1: GUIからの設定再読み込みシグナル
-        signal.signal(signal.SIGUSR1, lambda sig, frame: GLib.idle_add(self.reload_config))
-        Gtk.main()
+        def _handle_signal(sig, frame):
+            logger.info(f"Received signal {sig}")
+            if hasattr(signal, "SIGUSR1") and sig == signal.SIGUSR1:
+                self.reload_config()
+            else:
+                self.on_exit(None, None)
+
+        if hasattr(signal, "SIGUSR1"):
+            signal.signal(signal.SIGUSR1, _handle_signal)
+        signal.signal(signal.SIGINT, _handle_signal)
+        signal.signal(signal.SIGTERM, _handle_signal)
+        
+        self.icon.run()
 
 if __name__ == "__main__":
     # Prevent double execution
     lock_socket = check_singleton()
     
-    app = STTDaemonAppIndicator()
+    app = STTDaemon()
     app.run()

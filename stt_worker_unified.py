@@ -11,7 +11,6 @@ import signal
 import threading
 import queue
 import logging
-import select
 import numpy as np
 import sounddevice as sd
 import config_manager
@@ -53,9 +52,12 @@ def log_memory_usage(label=""):
     """メモリ使用量をログに出力 (RSSとPeakの両方)"""
     try:
         rss = get_current_memory_usage_mb()
-        peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        peak = 0.0
+        # Windowsなど resource モジュールがない環境への対策
+        if 'resource' in sys.modules:
+            peak = sys.modules['resource'].getrusage(sys.modules['resource'].RUSAGE_SELF).ru_maxrss / 1024
         logger.info(f"Memory Usage [{label}]: RSS={rss:.2f} MB, Peak={peak:.2f} MB")
-    except:
+    except Exception as e:
         pass
 
 # --- Constants ---
@@ -102,6 +104,7 @@ class UnifiedSTTWorker:
         
         self.model = None
         self.model_loading = False
+        self.model_load_error = None
         self.model_ready_event = threading.Event()
         
         self.audio_queue = queue.Queue()
@@ -130,6 +133,15 @@ class UnifiedSTTWorker:
             # READYシグナルを出して待機
             print("[STATUS] READY")
             sys.stdout.flush()
+
+        self.cmd_queue = queue.Queue()
+        
+        def _stdin_reader():
+            for line in iter(sys.stdin.readline, ''):
+                if not line:
+                    break
+                self.cmd_queue.put(line.strip().upper())
+        threading.Thread(target=_stdin_reader, daemon=True).start()
 
         # タイムアウト監視スレッドの開始
         threading.Thread(target=self._monitor_timeout, daemon=True).start()
@@ -519,27 +531,26 @@ class UnifiedSTTWorker:
                 logger.info(f"Timeout ({self.timeout}s). Exiting.")
                 break
 
-            r, _, _ = select.select([sys.stdin], [], [], 0.1)
-            if r:
-                line = sys.stdin.readline()
-                if not line: break 
-                
-                cmd = line.strip().upper()
-                self.last_activity = time.time()
-                
-                if cmd == "START":
-                    self.start_recording()
-                    print("ACK:START")
-                    sys.stdout.flush()
-                elif cmd == "STOP":
-                    self.stop_and_transcribe()
-                    print("ACK:STOP")
-                    sys.stdout.flush()
-                elif cmd == "QUIT":
-                    break
-                elif cmd == "PING":
-                    print("PONG")
-                    sys.stdout.flush()
+            try:
+                cmd = self.cmd_queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
+
+            self.last_activity = time.time()
+            
+            if cmd == "START":
+                self.start_recording()
+                print("ACK:START")
+                sys.stdout.flush()
+            elif cmd == "STOP":
+                self.stop_and_transcribe()
+                print("ACK:STOP")
+                sys.stdout.flush()
+            elif cmd == "QUIT":
+                break
+            elif cmd == "PING":
+                print("PONG")
+                sys.stdout.flush()
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, lambda s, f: sys.exit(0))
