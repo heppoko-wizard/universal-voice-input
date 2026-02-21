@@ -7,3 +7,18 @@ config.json
 *.log
 nohup.out
 worker_pid.txt
+
+# Temp and backup files
+*.backup
+*.bak
+*.swp
+*.tmp
+*~
+
+# Test scripts (e.g. test_cursor_widget.py, test_pulse.py)
+test_*.py
+*_test.py
+
+# Generated / Misc directories
+.agents/
+devices.txt
