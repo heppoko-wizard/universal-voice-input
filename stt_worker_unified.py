@@ -141,6 +141,8 @@ class UnifiedSTTWorker:
                 if not line:
                     break
                 self.cmd_queue.put(line.strip().upper())
+            # sys.stdinが閉じられた（親プロセスが死んだ等）場合QUITを送って自らも終了する
+            self.cmd_queue.put("QUIT")
         threading.Thread(target=_stdin_reader, daemon=True).start()
 
         # タイムアウト監視スレッドの開始
